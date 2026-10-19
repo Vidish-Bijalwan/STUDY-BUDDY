@@ -1,0 +1,29 @@
+# PERF-09: CI memory budget — boot the app, run core workloads on fixtures,
+# fail if peak RSS exceeds 400 MB (see scripts/check_memory.py and
+# docs/ops/memory.md).
+name: memory-budget
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  memory-budget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies (hash-pinned, same as Render)
+        run: pip install --require-hashes -r requirements.txt
+
+      - name: Run memory budget check
+        env:
+          OPP_NO_AUTO_REFRESH: "1"
+        run: python scripts/check_memory.py --budget-mb 400

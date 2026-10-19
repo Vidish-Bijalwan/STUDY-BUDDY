@@ -1,0 +1,26 @@
+# OPS-04: keep the Docker build context small and secret-free.
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.gitignore
+.env
+.env.*
+instance/
+uploads/
+*.dump
+*.log
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+node_modules/
+docs-site/node_modules/
+benchmarks/
+data/*.json
+!data/skills_taxonomy.json
+tests/__pycache__/
+Dockerfile
+docker-compose.yml
+.dockerignore
