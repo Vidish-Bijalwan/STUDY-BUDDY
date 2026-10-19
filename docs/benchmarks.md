@@ -43,3 +43,32 @@ Expand the gold set with challenging cases before claiming production accuracy.*
 
 CI fails if skill F1 drops more than 2 points from the baseline in
 `benchmarks/baseline.json`. (TODO: wire into GitHub Actions.)
+
+---
+
+## OSS-07 evidence page: what we claim, with proof
+
+Every number below is produced by a checked-in script or CI run. "Synthetic"
+labels mark numbers measured on generated gold data rather than real users.
+
+| Claim | Evidence | Status |
+|---|---|---|
+| Parser metrics above | `python benchmarks/run.py --quick` → `benchmarks/results.json` | synthetic |
+| 8,720 tests, suite green | `pytest tests/ -q` (67 test files) | CI |
+| RAG quality | `make rag-bench` (RAG-01) | tracked |
+
+### What we do NOT claim
+
+- No "ATS score" and no "beats the ATS" claims anywhere (ENG-01): the
+  readiness score is a labelled transparent heuristic with
+  `heuristic: true` in API responses.
+- Synthetic benchmark numbers stay labelled synthetic until measured on
+  consented, anonymized real-world samples — the label changes when that
+  happens, not before.
+
+### Accessibility & performance budgets (tracked, not yet all green)
+
+- Target: Lighthouse accessibility ≥ 90 on Core Loop pages; axe CI gate
+  (TEST-08).
+- Performance budget: Core Loop pages interactive < 3s on throttled mobile
+  (Lighthouse mobile). Numbers published per release.

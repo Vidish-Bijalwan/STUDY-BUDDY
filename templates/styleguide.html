@@ -1,0 +1,105 @@
+{#
+  STUDY-BUDDY living style guide (UX-01).
+  DEV-ONLY: do not link from production navigation. Serve behind a
+  dev/flagged route, e.g.:
+
+      @app.route("/styleguide")
+      def styleguide():
+          if not app.debug and not current_user.is_admin:
+              abort(404)
+          return render_template("styleguide.html")
+
+  This page is the adoption reference for static/css/tokens.css.
+#}
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Style Guide (dev) | STUDY-BUDDY</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}" />
+  <style>
+    body { background: var(--sb-color-bg); color: var(--sb-color-text);
+           font-family: var(--sb-font-sans); line-height: var(--sb-line-height);
+           margin: 0; }
+    .wrap { max-width: 72rem; margin: 0 auto; padding: var(--sb-space-8) var(--sb-space-4); }
+    .swatch { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: var(--sb-space-4); }
+    .swatch div { border: 1px solid var(--sb-color-border); border-radius: var(--sb-radius-md);
+                  padding: var(--sb-space-4); font-size: var(--sb-text-sm); }
+    .swatch span { display: block; height: 2.5rem; border-radius: var(--sb-radius-sm); margin-bottom: var(--sb-space-2); }
+    .dev-note { border: 2px dashed var(--sb-color-warning); border-radius: var(--sb-radius-md);
+                padding: var(--sb-space-4); background: var(--sb-color-warning-soft); color: var(--sb-color-text); }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="dev-note" role="note">
+      <strong>DEV-ONLY page.</strong> This style guide documents the design tokens and
+      example components. It must not be linked from the production navigation and
+      should 404 outside dev/staff access.
+    </div>
+
+    <h1>STUDY-BUDDY Style Guide</h1>
+    <p>Tokens live in <code>static/css/tokens.css</code>. Dark mode follows
+    <code>prefers-color-scheme</code>; a <code>data-theme</code> attribute on
+    <code>&lt;html&gt;</code> forces light/dark. Font stack includes Devanagari-safe
+    fallbacks (Nirmala UI, Mangal) per UX-05.</p>
+
+    <h2>Colors</h2>
+    <div class="swatch">
+      <div><span style="background: var(--sb-color-bg)"></span>--sb-color-bg</div>
+      <div><span style="background: var(--sb-color-surface)"></span>--sb-color-surface</div>
+      <div><span style="background: var(--sb-color-primary)"></span>--sb-color-primary</div>
+      <div><span style="background: var(--sb-color-success)"></span>--sb-color-success</div>
+      <div><span style="background: var(--sb-color-warning)"></span>--sb-color-warning</div>
+      <div><span style="background: var(--sb-color-danger)"></span>--sb-color-danger</div>
+      <div><span style="background: var(--sb-color-info)"></span>--sb-color-info</div>
+    </div>
+
+    <h2>Buttons</h2>
+    <p>
+      <button class="sb-btn sb-btn--primary" type="button">Analyze resume</button>
+      <button class="sb-btn sb-btn--secondary" type="button">Cancel</button>
+      <button class="sb-btn sb-btn--danger" type="button">Revoke link</button>
+      <button class="sb-btn sb-btn--primary" type="button" disabled>Disabled</button>
+    </p>
+
+    <h2>Cards</h2>
+    <div class="sb-card" style="max-width: 28rem">
+      <h3 class="sb-card__title">Resume Readiness: 78</h3>
+      <p class="sb-card__meta">A transparent heuristic. Real employer systems differ.</p>
+      <p>Expandable rule list with evidence spans (UX-07).</p>
+    </div>
+
+    <h2>Form</h2>
+    <form class="sb-form" style="max-width: 28rem" onsubmit="return false" aria-label="Style guide demo form">
+      <label for="sg-email">Email</label>
+      <input id="sg-email" name="email" type="email" aria-describedby="sg-email-hint" />
+      <p class="sb-form__hint" id="sg-email-hint">Used only for opt-in notifications.</p>
+      <label for="sg-lang">Language</label>
+      <select id="sg-lang" name="lang">
+        <option value="en">English</option>
+        <option value="hi">हिन्दी</option>
+      </select>
+      <p><button class="sb-btn sb-btn--primary" type="submit">Save</button></p>
+      <p class="sb-form__error" role="alert">Example inline error (aria-described pattern).</p>
+    </form>
+
+    <h2>Honest-label badges (UX-08)</h2>
+    <p>
+      <span class="sb-badge sb-badge--rule">Rule-based</span>
+      <span class="sb-badge sb-badge--ai">AI-assisted</span>
+      <span class="sb-badge sb-badge--curated">Curated data</span>
+      <span class="sb-badge sb-badge--beta">Beta</span>
+      <span class="sb-badge">Sample data</span>
+    </p>
+
+    <h2>Type scale</h2>
+    <p style="font-size: var(--sb-text-xs)">xs — small print</p>
+    <p style="font-size: var(--sb-text-sm)">sm — hints, meta</p>
+    <p>base — body text</p>
+    <p style="font-size: var(--sb-text-xl)">xl — card titles</p>
+    <p style="font-size: var(--sb-text-3xl)">3xl — page titles</p>
+  </main>
+</body>
+</html>

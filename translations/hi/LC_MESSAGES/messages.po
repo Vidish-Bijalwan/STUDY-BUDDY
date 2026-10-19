@@ -1,0 +1,107 @@
+# Hindi translations for STUDY-BUDDY.
+# Copyright (c) 2026 STUDY-BUDDY contributors. Apache-2.0.
+msgid ""
+msgstr ""
+"Project-Id-Version: STUDY-BUDDY 1.0\n"
+"Language: hi\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Analyze resume"
+msgstr "रिज़्यूमे का विश्लेषण करें"
+
+msgid "Resume Readiness Score"
+msgstr "रिज़्यूमे रेडिनेस स्कोर"
+
+msgid "A transparent heuristic. Real employer systems differ."
+msgstr "एक पारदर्शी अनुमान। असली नियोक्ता प्रणालियाँ अलग होती हैं।"
+
+msgid "Upload resume"
+msgstr "रिज़्यूमे अपलोड करें"
+
+msgid "Try with a sample resume"
+msgstr "सैंपल रिज़्यूमे से आज़माएँ"
+
+msgid "See why this score"
+msgstr "यह स्कोर क्यों — जानें"
+
+msgid "How to fix"
+msgstr "कैसे सुधारें"
+
+msgid "Download report"
+msgstr "रिपोर्ट डाउनलोड करें"
+
+msgid "Flashcards"
+msgstr "फ्लैशकार्ड्स"
+
+msgid "Quizzes"
+msgstr "क्विज़"
+
+msgid "Practice streak"
+msgstr "प्रैक्टिस स्ट्रीक"
+
+msgid "days"
+msgstr "दिन"
+
+msgid "Weak topics"
+msgstr "कमज़ोर टॉपिक्स"
+
+msgid "Applications"
+msgstr "आवेदन"
+
+msgid "Add application"
+msgstr "आवेदन जोड़ें"
+
+msgid "Import CSV"
+msgstr "CSV इम्पोर्ट करें"
+
+msgid "Export CSV"
+msgstr "CSV एक्सपोर्ट करें"
+
+msgid "You are offline."
+msgstr "आप ऑफ़लाइन हैं।"
+
+msgid "Too many requests"
+msgstr "बहुत ज़्यादा अनुरोध"
+
+msgid "Page not found"
+msgstr "पेज नहीं मिला"
+
+msgid "Go home"
+msgstr "होम पर जाएँ"
+
+msgid "Save"
+msgstr "सहेजें"
+
+msgid "Cancel"
+msgstr "रद्द करें"
+
+msgid "Retry"
+msgstr "पुनः प्रयास करें"
+
+msgid "Loading…"
+msgstr "लोड हो रहा है…"
+
+msgid "Sample profile"
+msgstr "सैंपल प्रोफ़ाइल"
+
+msgid "Beta"
+msgstr "बीटा"
+
+msgid "Rule-based"
+msgstr "नियम-आधारित"
+
+msgid "AI-assisted"
+msgstr "AI-सहायित"
+
+msgid "No applications yet"
+msgstr "अभी कोई आवेदन नहीं"
+
+msgid "Share score card"
+msgstr "स्कोर कार्ड शेयर करें"
+
+msgid "Notifications"
+msgstr "सूचनाएँ"
+
+msgid "Unsubscribe"
+msgstr "अनसब्सक्राइब करें"

@@ -1,0 +1,13 @@
+{# SHAREABLE PAGE META TAGS (UX-11).
+Usage in <head>: {% include "partials/meta.html" %} after setting
+page_title, page_description, page_image (absolute URL) and page_path. #}
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="STUDY-BUDDY" />
+<meta property="og:title" content="{{ page_title | default('STUDY-BUDDY — privacy-first resume and career copilot') }}" />
+<meta property="og:description" content="{{ page_description | default('Transparent, rule-based resume readiness scoring for students. Free and open source.') }}" />
+{% if page_image %}<meta property="og:image" content="{{ page_image }}" />{% endif %}
+{% if page_path %}<meta property="og:url" content="{{ request.url_root.rstrip('/') }}{{ page_path }}" />{% endif %}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="{{ page_title | default('STUDY-BUDDY') }}" />
+<meta name="twitter:description" content="{{ page_description | default('Transparent, rule-based resume readiness scoring for students.') }}" />
+{% if page_image %}<meta name="twitter:image" content="{{ page_image }}" />{% endif %}

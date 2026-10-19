@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{# Helpful 404 (UX-11). If the app's 404 handler renders this template, pass
+   request_id so users can quote it when reporting the problem (UX-06). #}
+{% block title %}Page not found | STUDY-BUDDY{% endblock %}
+{% block content %}
+<main style="max-width: 40rem; margin: 0 auto; padding: var(--sb-space-16) var(--sb-space-4); text-align: center;">
+  <p style="font-size: var(--sb-text-3xl);" aria-hidden="true">&#128269;</p>
+  <h1 style="font-size: var(--sb-text-3xl);">That page doesn't exist</h1>
+  <p class="sb-card__meta">The link you followed may be broken, or the page may have moved.
+  The tool you're looking for is probably one click away:</p>
+  <p style="display: flex; gap: var(--sb-space-3); justify-content: center; flex-wrap: wrap;">
+    <a class="sb-btn sb-btn--primary" href="/">Go home</a>
+    <a class="sb-btn sb-btn--secondary" href="/resume">Analyze a resume</a>
+    <a class="sb-btn sb-btn--secondary" href="/flashcards">Practice flashcards</a>
+  </p>
+  {% if request_id %}
+  <p class="sb-card__meta" style="margin-top: var(--sb-space-6);">
+    If you think this is a bug, mention request id <code>{{ request_id }}</code>
+    when reporting it.
+  </p>
+  {% endif %}
+</main>
+{% endblock %}
