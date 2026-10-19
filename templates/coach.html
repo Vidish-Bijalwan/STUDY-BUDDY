@@ -77,7 +77,7 @@
         {% if not is_authed %}
         <div class="ch-card ch-login-cta">
             <p>Log in to analyze your answers and track your clarity over time.</p>
-            <p><a href="{{ url_for('login') }}">Log in</a> &middot; <a href="{{ url_for('register') }}">Create account</a></p>
+            <p><a href="{{ url_for('auth.login') }}">Log in</a> &middot; <a href="{{ url_for('auth.register') }}">Create account</a></p>
         </div>
         {% else %}
         <div class="ch-card b-card b-reveal" id="input-card">

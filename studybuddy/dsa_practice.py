@@ -119,17 +119,14 @@ def validate_status_payload(payload):
     return {"status": status, "code": code}, None
 
 
-def weak_topic_diagnosis(progress_rows):
-    """Per-topic solve/stuck rates + recommended next topics/problems.
+def _aggregate_topic_stats(progress_rows, problems):
+    """Fold progress rows into per-topic counters.
 
-    progress_rows: iterable of dicts {problem_id, status, hints_used}.
-    Returns {"topics": [...], "recommendations": [...], "overall": {...}}.
+    Returns (by_topic, solved, stuck, attempted, solved_ids).
     """
-    problems = _load_by_id()
     by_topic = {}
     solved = stuck = attempted = 0
     solved_ids = set()
-
     for row in progress_rows:
         p = problems.get(row["problem_id"])
         if not p:
@@ -149,29 +146,33 @@ def weak_topic_diagnosis(progress_rows):
                 agg["solved"] += 1
             elif st == "stuck":
                 agg["stuck"] += 1
+    return by_topic, solved, stuck, attempted, solved_ids
 
-    topic_rows = []
+
+def _topic_rows(by_topic) -> list:
+    """Per-topic solve/stuck rates, weakest first."""
+    rows = []
     for t, agg in by_topic.items():
         n = agg["attempted"]
-        solve_rate = round(agg["solved"] / n * 100, 1) if n else 0.0
-        stuck_rate = round(agg["stuck"] / n * 100, 1) if n else 0.0
-        topic_rows.append({
+        rows.append({
             "topic": t, "attempted": n, "solved": agg["solved"],
-            "stuck": agg["stuck"], "solve_rate": solve_rate,
-            "stuck_rate": stuck_rate,
+            "stuck": agg["stuck"],
+            "solve_rate": round(agg["solved"] / n * 100, 1) if n else 0.0,
+            "stuck_rate": round(agg["stuck"] / n * 100, 1) if n else 0.0,
         })
-    # weakest first: lowest solve rate, then highest stuck rate
-    topic_rows.sort(key=lambda r: (r["solve_rate"], -r["stuck_rate"]))
+    rows.sort(key=lambda r: (r["solve_rate"], -r["stuck_rate"]))
+    return rows
 
+
+def _weak_topic_recommendations(topic_rows, solved_ids) -> list:
+    """Unsolved easy-first problems from the weakest topics (max 6)."""
     recommendations = []
-    # 1) revisit weakest topics with unsolved problems in them
+    order = {"Easy": 0, "Medium": 1, "Hard": 2}
     for tr in topic_rows[:4]:
         if tr["solve_rate"] >= 80 and tr["stuck_rate"] == 0:
             continue
         cands = [p for p in _load()
                  if tr["topic"] in p.get("topics", []) and p["id"] not in solved_ids]
-        # prefer easier problems first for weak topics
-        order = {"Easy": 0, "Medium": 1, "Hard": 2}
         cands.sort(key=lambda p: order.get(p.get("difficulty"), 1))
         for p in cands[:2]:
             recommendations.append({
@@ -182,21 +183,42 @@ def weak_topic_diagnosis(progress_rows):
             })
         if len(recommendations) >= 6:
             break
+    return recommendations
+
+
+def _strong_topic_recommendations(topic_rows, solved_ids) -> list:
+    """Hard problems in practiced topics, when nothing is weak."""
+    recommendations = []
+    strong = [tr for tr in topic_rows if tr["solve_rate"] >= 80][:2]
+    for tr in strong:
+        cands = [p for p in _load()
+                 if tr["topic"] in p.get("topics", [])
+                 and p.get("difficulty") == "Hard"
+                 and p["id"] not in solved_ids][:2]
+        for p in cands:
+            recommendations.append({
+                "problem_id": p["id"], "title": p["title"],
+                "difficulty": "Hard",
+                "reason": f"You're strong at {tr['topic']} — level up with a Hard problem.",
+            })
+    return recommendations
+
+
+def weak_topic_diagnosis(progress_rows):
+    """Per-topic solve/stuck rates + recommended next topics/problems.
+
+    progress_rows: iterable of dicts {problem_id, status, hints_used}.
+    Returns {"topics": [...], "recommendations": [...], "overall": {...}}.
+    """
+    problems = _load_by_id()
+    by_topic, solved, stuck, attempted, solved_ids = _aggregate_topic_stats(
+        progress_rows, problems)
+    topic_rows = _topic_rows(by_topic)
+    # 1) revisit weakest topics with unsolved problems in them
+    recommendations = _weak_topic_recommendations(topic_rows, solved_ids)
     # 2) if nothing weak, push to harder problems in practiced topics
     if not recommendations and topic_rows:
-        strong = [tr for tr in topic_rows if tr["solve_rate"] >= 80][:2]
-        for tr in strong:
-            cands = [p for p in _load()
-                     if tr["topic"] in p.get("topics", [])
-                     and p.get("difficulty") == "Hard"
-                     and p["id"] not in solved_ids][:2]
-            for p in cands:
-                recommendations.append({
-                    "problem_id": p["id"], "title": p["title"],
-                    "difficulty": "Hard",
-                    "reason": f"You're strong at {tr['topic']} — level up with a Hard problem.",
-                })
-
+        recommendations = _strong_topic_recommendations(topic_rows, solved_ids)
     total = solved + stuck + attempted
     return {
         "topics": topic_rows,

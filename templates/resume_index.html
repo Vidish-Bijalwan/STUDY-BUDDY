@@ -111,7 +111,7 @@
             {% else %}
             <div class="jd-login-cta">
                 <p>Log in to score your resume against any job description. Your match reports are saved to your dashboard.</p>
-                <a href="{{ url_for('login', next=url_for('resume_home')) }}">Log in to start matching</a>
+                <a href="{{ url_for('auth.login', next=url_for('resume_home')) }}">Log in to start matching</a>
             </div>
             {% endif %}
         </div>
@@ -141,7 +141,7 @@
             {% else %}
             <div class="jd-login-cta">
                 <p>Log in to rewrite your resume bullets. Your rewrites are saved to your dashboard.</p>
-                <a href="{{ url_for('login', next=url_for('resume_home')) }}">Log in to start rewriting</a>
+                <a href="{{ url_for('auth.login', next=url_for('resume_home')) }}">Log in to start rewriting</a>
             </div>
             {% endif %}
         </div>
@@ -169,7 +169,7 @@
             {% else %}
             <div class="jd-login-cta">
                 <p>Log in to save and compare resume versions.</p>
-                <a href="{{ url_for('login', next=url_for('resume_home')) }}">Log in to manage versions</a>
+                <a href="{{ url_for('auth.login', next=url_for('resume_home')) }}">Log in to manage versions</a>
             </div>
             {% endif %}
         </div>
@@ -204,7 +204,7 @@
             {% else %}
             <div class="jd-login-cta">
                 <p>Log in to generate tailored cover letters and outreach messages.</p>
-                <a href="{{ url_for('login', next=url_for('resume_home')) }}">Log in to generate</a>
+                <a href="{{ url_for('auth.login', next=url_for('resume_home')) }}">Log in to generate</a>
             </div>
             {% endif %}
         </div>
@@ -237,7 +237,7 @@
             {% else %}
             <div class="jd-login-cta">
                 <p>Log in to grade your LinkedIn profile. Your grading reports are saved to your dashboard.</p>
-                <a href="{{ url_for('login', next=url_for('resume_home')) }}">Log in to start grading</a>
+                <a href="{{ url_for('auth.login', next=url_for('resume_home')) }}">Log in to start grading</a>
             </div>
             {% endif %}
         </div>

@@ -91,6 +91,78 @@ _SENT_END_RE = re.compile(r"[.!?](?=\s|$)")
 # 1. Upload validation
 # ---------------------------------------------------------------------------
 
+def _upload_name_error(file_storage) -> str | None:
+    """Error string when the filename is missing/not a PDF, else None."""
+    filename = getattr(file_storage, "filename", None) or ""
+    filename = os.path.basename(filename).strip()
+    if not filename:
+        return "No file was uploaded."
+    if not filename.lower().endswith(".pdf"):
+        return "Only PDF files are accepted."
+    return None
+
+
+def _upload_mime_error(file_storage) -> str | None:
+    """Error string when a declared MIME type is not PDF-ish, else None."""
+    mimetype = (
+        getattr(file_storage, "mimetype", None)
+        or getattr(file_storage, "content_type", "")
+        or ""
+    )
+    mimetype = str(mimetype).split(";")[0].strip().lower()
+    if mimetype and "pdf" not in mimetype and mimetype != "application/octet-stream":
+        return "Expected a PDF file (declared content type: '%s')." % mimetype
+    return None
+
+
+def _upload_stream(file_storage):
+    """Resolve the readable stream, or None when unreadable."""
+    stream = getattr(file_storage, "stream", None)
+    if stream is None and hasattr(file_storage, "read"):
+        stream = file_storage
+    return stream
+
+
+def _upload_size_error(stream) -> str | None:
+    """Error string when the stream is empty/oversized/unreadable, else None."""
+    try:
+        stream.seek(0, os.SEEK_END)
+        size = stream.tell()
+    except (OSError, AttributeError, ValueError):
+        return "Could not read the uploaded file."
+    if size is None or size <= 0:
+        return "The file is empty."
+    if size > MAX_UPLOAD_BYTES:
+        return "File exceeds the 25 MB limit (%s MB)." % round(
+            size / (1024 * 1024), 1)
+    return None
+
+
+def _upload_magic_error(stream, pos) -> str | None:
+    """Error string when %PDF is missing from the first 1024 bytes.
+
+    Restores the stream to ``pos`` (captured before the size check) on every
+    path, exactly as the original monolithic version did.
+    """
+    try:
+        try:
+            stream.seek(0)
+            header = stream.read(1024)
+        except (OSError, AttributeError, ValueError):
+            return "Could not read the uploaded file."
+    finally:
+        if pos is not None:
+            try:
+                stream.seek(pos)
+            except (OSError, ValueError):
+                pass
+    if isinstance(header, str):  # pragma: no cover — uploads are binary
+        header = header.encode("latin-1", "ignore")
+    if not isinstance(header, (bytes, bytearray)) or b"%PDF" not in bytes(header):
+        return "The file is not a valid PDF (missing %PDF header)."
+    return None
+
+
 def validate_upload(file_storage) -> tuple[bool, str]:
     """Validate an uploaded file before any PDF parsing is attempted.
 
@@ -111,64 +183,26 @@ def validate_upload(file_storage) -> tuple[bool, str]:
     if file_storage is None:
         return False, "No file was uploaded."
 
-    filename = getattr(file_storage, "filename", None) or ""
-    filename = os.path.basename(filename).strip()
-    if not filename:
-        return False, "No file was uploaded."
-    if not filename.lower().endswith(".pdf"):
-        return False, "Only PDF files are accepted."
+    for check in (_upload_name_error, _upload_mime_error):
+        err = check(file_storage)
+        if err:
+            return False, err
 
-    # MIME check (best-effort: only enforced when a type is actually declared).
-    mimetype = (
-        getattr(file_storage, "mimetype", None)
-        or getattr(file_storage, "content_type", "")
-        or ""
-    )
-    mimetype = str(mimetype).split(";")[0].strip().lower()
-    if mimetype and "pdf" not in mimetype and mimetype != "application/octet-stream":
-        return False, "Expected a PDF file (declared content type: '%s')." % mimetype
-
-    stream = getattr(file_storage, "stream", None)
-    if stream is None and hasattr(file_storage, "read"):
-        stream = file_storage
+    stream = _upload_stream(file_storage)
     if stream is None:
         return False, "Could not read the uploaded file."
 
     try:
-        try:
-            pos = stream.tell()
-        except (OSError, AttributeError, ValueError):
-            pos = None
-        stream.seek(0, os.SEEK_END)
-        size = stream.tell()
+        pos = stream.tell()
     except (OSError, AttributeError, ValueError):
-        return False, "Could not read the uploaded file."
+        pos = None
 
-    if size is None or size <= 0:
-        return False, "The file is empty."
-    if size > MAX_UPLOAD_BYTES:
-        return (
-            False,
-            "File exceeds the 25 MB limit (%s MB)." % round(size / (1024 * 1024), 1),
-        )
-
-    # Magic-byte check: %PDF must appear within the first 1024 bytes.
-    try:
-        stream.seek(0)
-        header = stream.read(1024)
-    except (OSError, AttributeError, ValueError):
-        return False, "Could not read the uploaded file."
-    finally:
-        if pos is not None:
-            try:
-                stream.seek(pos)
-            except (OSError, ValueError):
-                pass
-    if isinstance(header, str):  # pragma: no cover — uploads are binary
-        header = header.encode("latin-1", "ignore")
-    if not isinstance(header, (bytes, bytearray)) or b"%PDF" not in bytes(header):
-        return False, "The file is not a valid PDF (missing %PDF header)."
-
+    err = _upload_size_error(stream)
+    if err:
+        return False, err
+    err = _upload_magic_error(stream, pos)
+    if err:
+        return False, err
     return True, ""
 
 

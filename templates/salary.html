@@ -94,7 +94,7 @@
             <button class="sal-btn" id="cmpClear" type="button" style="background:transparent;border:1px solid rgba(255,255,255,0.18);">Clear</button>
         </div>
         {% else %}
-        <p class="sal-login-cta"><a href="{{ url_for('login', next='/salary') }}">Log in</a> to compare your expected salary against these ranges.</p>
+        <p class="sal-login-cta"><a href="{{ url_for('auth.login', next='/salary') }}">Log in</a> to compare your expected salary against these ranges.</p>
         {% endif %}
 
         <p class="sal-count" id="salCount"></p>

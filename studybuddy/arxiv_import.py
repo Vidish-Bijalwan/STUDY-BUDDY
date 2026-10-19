@@ -33,7 +33,9 @@ logger = logging.getLogger(__name__)
 
 TIMEOUT = 15
 _MAX_RETRIES = 2  # max 2 retries -> up to 3 attempts per external call
-MAILTO = "research@student.local"
+# RAG-06: contact email for the User-Agent "mailto:" token comes from the
+# environment; the default keeps existing behavior byte-identical.
+MAILTO = os.environ.get("RESEARCH_CONTACT_EMAIL", "research@student.local").strip()
 USER_AGENT = (
     f"ACRA-ResearchAssistant/1.0 (mailto:{MAILTO}; educational research assistant)"
 )
@@ -765,6 +767,55 @@ def related_papers(openalex_id, max_results=10):
                          "'References' = foundations to read first.")}
 
 
+def _normalize_interests(interests) -> list:
+    """Clean interest keywords (max 10)."""
+    return [_clean13(i).strip().lower() for i in (interests or [])
+            if isinstance(i, str) and _clean13(i).strip()][:10]
+
+
+def _clamp_minutes(minutes_per_paper) -> int:
+    """Coerce to int and clamp to [10, 180]; default 45."""
+    try:
+        minutes_per_paper = int(minutes_per_paper)
+    except (TypeError, ValueError):
+        minutes_per_paper = 45
+    return max(10, min(180, minutes_per_paper))
+
+
+def _paper_year(p) -> int | None:
+    """Coerce the year field; None when missing/unparseable."""
+    try:
+        year = int(p.get("year") or 0)
+    except (TypeError, ValueError):
+        year = 0
+    return year or None
+
+
+def _score_one_paper(p, interests, now_year, minutes_per_paper) -> dict | None:
+    """Score a single paper dict; None when it is not a dict."""
+    if not isinstance(p, dict):
+        return None
+    title = _clean13(p.get("title") or "Untitled")[:120]
+    abstract = _clean13(p.get("abstract") or "").lower()
+    blob = (title + " " + abstract).lower()
+    hits = sum(1 for kw in interests if kw in blob)
+    year = _paper_year(p)
+    recency = max(0, 5 - (now_year - year)) if year else 0
+    score = hits * 10 + recency * 2
+    why = []
+    if hits:
+        why.append(f"Matches your interests ({hits} keyword(s))")
+    if recency >= 3:
+        why.append("Recent paper")
+    if not why:
+        why.append("General background reading")
+    # Longer abstracts ≈ denser papers ≈ more time.
+    est = minutes_per_paper + (15 if len(abstract) > 1500 else 0)
+    return {"id": p.get("id"), "title": title, "year": year,
+            "priority": score, "why": "; ".join(why),
+            "est_minutes": est}
+
+
 def reading_queue(papers, interests=None, minutes_per_paper=45):
     """Prioritized reading queue with time estimates.
 
@@ -774,44 +825,20 @@ def reading_queue(papers, interests=None, minutes_per_paper=45):
     """
     if not isinstance(papers, (list, tuple)) or not papers:
         raise ValueError("papers must be a non-empty list.")
-    interests = [_clean13(i).strip().lower() for i in (interests or [])
-                 if isinstance(i, str) and _clean13(i).strip()][:10]
-    try:
-        minutes_per_paper = int(minutes_per_paper)
-    except (TypeError, ValueError):
-        minutes_per_paper = 45
-    minutes_per_paper = max(10, min(180, minutes_per_paper))
+    interests = _normalize_interests(interests)
+    minutes_per_paper = _clamp_minutes(minutes_per_paper)
 
     now_year = datetime.now(UTC).year
     queue = []
     for p in papers:
-        if not isinstance(p, dict):
-            continue
-        title = _clean13(p.get("title") or "Untitled")[:120]
-        abstract = _clean13(p.get("abstract") or "").lower()
-        blob = (title + " " + abstract).lower()
-        hits = sum(1 for kw in interests if kw in blob)
-        try:
-            year = int(p.get("year") or 0)
-        except (TypeError, ValueError):
-            year = 0
-        recency = max(0, 5 - (now_year - year)) if year else 0
-        score = hits * 10 + recency * 2
-        why = []
-        if hits:
-            why.append(f"Matches your interests ({hits} keyword(s))")
-        if recency >= 3:
-            why.append("Recent paper")
-        if not why:
-            why.append("General background reading")
-        # Longer abstracts ≈ denser papers ≈ more time.
-        est = minutes_per_paper + (15 if len(abstract) > 1500 else 0)
-        queue.append({"id": p.get("id"), "title": title, "year": year or None,
-                      "priority": score, "why": "; ".join(why),
-                      "est_minutes": est})
+        entry = _score_one_paper(p, interests, now_year, minutes_per_paper)
+        if entry is not None:
+            queue.append(entry)
     queue.sort(key=lambda x: (-x["priority"], -(x["year"] or 0)))
     total = sum(q["est_minutes"] for q in queue)
     return {"queue": queue, "total_papers": len(queue),
             "total_minutes": total,
             "total_hours": round(total / 60, 1),
             "guidance": f"~{round(total/60, 1)}h of reading. Do 1-2 papers per day."}
+
+

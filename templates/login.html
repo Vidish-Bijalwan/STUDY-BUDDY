@@ -5,7 +5,7 @@
     <h1 style="font-family:'Outfit',sans-serif;font-size:2rem;margin-bottom:.5rem;">Welcome <span class="b-grad">back</span></h1>
     <p style="color:var(--b-muted);margin-bottom:1.8rem;">Log in to pick up your analyses, goals and research sessions.</p>
     {% if error %}<div class="b-flash b-flash--error" role="alert">{{ error }}</div>{% endif %}
-    <form method="POST" action="{{ url_for('login', next=next) }}">
+    <form method="POST" action="{{ url_for('auth.login', next=next) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="next" value="{{ next }}">
         <div class="b-field">
@@ -28,6 +28,6 @@
         Continue with Google
     </a>
     {% endif %}
-    <p style="margin-top:1.4rem;color:var(--b-muted);font-size:.92rem;text-align:center;">New here? <a href="{{ url_for('register') }}" style="color:var(--b-a3);font-weight:600;">Create an account</a></p>
+    <p style="margin-top:1.4rem;color:var(--b-muted);font-size:.92rem;text-align:center;">New here? <a href="{{ url_for('auth.register') }}" style="color:var(--b-a3);font-weight:600;">Create an account</a></p>
 </div>
 {% endblock %}

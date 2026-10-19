@@ -99,7 +99,7 @@
         </form>
 
         {% if not is_authed %}
-        <p class="opp-login-cta"><a href="{{ url_for('login', next='/opportunities') }}">Log in</a> to bookmark opportunities and build your shortlist.</p>
+        <p class="opp-login-cta"><a href="{{ url_for('auth.login', next='/opportunities') }}">Log in</a> to bookmark opportunities and build your shortlist.</p>
         {% endif %}
 
         <p class="opp-count">{{ opps|length }} opportunit{{ 'y' if opps|length == 1 else 'ies' }} · sorted by deadline</p>

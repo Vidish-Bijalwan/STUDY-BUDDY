@@ -1,0 +1,423 @@
+{
+ "reading_queue": {
+  "interests": [
+   "retrieval",
+   "generation"
+  ],
+  "output": {
+   "guidance": "~2.2h of reading. Do 1-2 papers per day.",
+   "queue": [
+    {
+     "est_minutes": 30,
+     "id": "p2",
+     "priority": 26,
+     "title": "Retrieval Augmented Generation",
+     "why": "Matches your interests (2 keyword(s)); Recent paper",
+     "year": 2024
+    },
+    {
+     "est_minutes": 30,
+     "id": "p4",
+     "priority": 4,
+     "title": "Graph Neural Networks",
+     "why": "General background reading",
+     "year": 2023
+    },
+    {
+     "est_minutes": 45,
+     "id": "p1",
+     "priority": 0,
+     "title": "Attention Is All You Need",
+     "why": "General background reading",
+     "year": 2017
+    },
+    {
+     "est_minutes": 30,
+     "id": "p3",
+     "priority": 0,
+     "title": "Untitled",
+     "why": "General background reading",
+     "year": null
+    }
+   ],
+   "total_hours": 2.2,
+   "total_minutes": 135,
+   "total_papers": 4
+  },
+  "papers": [
+   {
+    "abstract": "We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. We propose the Transformer. ",
+    "id": "p1",
+    "title": "Attention Is All You Need",
+    "year": 2017
+   },
+   {
+    "abstract": "RAG combines retrieval with generation.",
+    "id": "p2",
+    "title": "Retrieval Augmented Generation",
+    "year": 2024
+   },
+   {
+    "abstract": null,
+    "id": "p3",
+    "title": null,
+    "year": "notayear"
+   },
+   "not-a-dict",
+   {
+    "id": "p4",
+    "title": "Graph Neural Networks",
+    "year": 2023
+   }
+  ]
+ },
+ "star_convert": {
+  "inputs": [
+   "Built a Flask API used by 200 students; I needed to cut response times. Reduced p95 latency by 40% after adding Redis caching.",
+   "Led a team of 5 interns - shipped the onboarding flow - goal was to reduce drop-off.",
+   "Fixed bugs.",
+   "Responsible for maintaining the CI pipeline and I was tasked with speeding it up, which cut build times from 20 to 8 minutes."
+  ],
+  "outputs": {
+   "b0": {
+    "action": "",
+    "completeness": "3/4 parts present",
+    "gaps": [
+     {
+      "part": "action",
+      "prompt": "Add what YOU specifically did (verbs, tools, decisions)."
+     }
+    ],
+    "result": "Reduced p95 latency by 40% after adding Redis caching",
+    "situation": "Built a Flask API used by 200 students",
+    "star_bullet": "[S: Built a Flask API used by 200 students] [T: I needed to cut response times] [R: Reduced p95 latency by 40% after adding Redis caching]",
+    "task": "I needed to cut response times"
+   },
+   "b1": {
+    "action": "shipped the onboarding flow",
+    "completeness": "3/4 parts present",
+    "gaps": [
+     {
+      "part": "result",
+      "prompt": "Add the outcome with a number: %, users, time saved, revenue."
+     }
+    ],
+    "result": "",
+    "situation": "Led a team of 5 interns",
+    "star_bullet": "[S: Led a team of 5 interns] [T: goal was to reduce drop-off] [A: shipped the onboarding flow]",
+    "task": "goal was to reduce drop-off"
+   },
+   "b2": {
+    "action": "",
+    "completeness": "1/4 parts present",
+    "gaps": [
+     {
+      "part": "task",
+      "prompt": "Add your goal: what were you trying to achieve?"
+     },
+     {
+      "part": "action",
+      "prompt": "Add what YOU specifically did (verbs, tools, decisions)."
+     },
+     {
+      "part": "result",
+      "prompt": "Add the outcome with a number: %, users, time saved, revenue."
+     }
+    ],
+    "result": "",
+    "situation": "Fixed bugs",
+    "star_bullet": "[S: Fixed bugs]",
+    "task": ""
+   },
+   "b3": {
+    "action": "",
+    "completeness": "2/4 parts present",
+    "gaps": [
+     {
+      "part": "action",
+      "prompt": "Add what YOU specifically did (verbs, tools, decisions)."
+     },
+     {
+      "part": "result",
+      "prompt": "Add the outcome with a number: %, users, time saved, revenue."
+     }
+    ],
+    "result": "",
+    "situation": "Responsible for maintaining the CI pipeline and I was tasked with speeding it up, which cut build times from 20 to 8 minutes",
+    "star_bullet": "[S: Responsible for maintaining the CI pipeline and I was tasked with speeding it up, which cut build times from 20 to 8 minutes] [T: Speeding it up, which cut build times from 20 to 8 minutes.]",
+    "task": "Speeding it up, which cut build times from 20 to 8 minutes."
+   }
+  }
+ },
+ "suggest_next_papers": {
+  "output_bad_max": [
+   {
+    "reason": "Cited by 'Center Paper'",
+    "title": "Neighbor One",
+    "year": 2022
+   },
+   {
+    "reason": "References 'Center Paper'",
+    "title": "Neighbor Two",
+    "year": 2021
+   }
+  ],
+  "output_dicts": [
+   {
+    "reason": "Cited by 'Center Paper'",
+    "title": "Neighbor One",
+    "year": 2022
+   },
+   {
+    "reason": "References 'Center Paper'",
+    "title": "Neighbor Two",
+    "year": 2021
+   }
+  ],
+  "output_mixed": [
+   {
+    "reason": "Cited by 'Center Paper'",
+    "title": "Neighbor One",
+    "year": 2022
+   },
+   {
+    "reason": "References 'Center Paper'",
+    "title": "Neighbor Two",
+    "year": 2021
+   }
+  ],
+  "output_none_user": [
+   {
+    "reason": "Cited by 'Center Paper'",
+    "title": "Neighbor One",
+    "year": 2022
+   },
+   {
+    "reason": "References 'Center Paper'",
+    "title": "Neighbor Two",
+    "year": 2021
+   },
+   {
+    "reason": "Appears in the citation graph of 'Other User Paper'",
+    "title": "Center Paper",
+    "year": null
+   }
+  ]
+ },
+ "validate_upload": {
+  "bad_magic": [
+   false,
+   "The file is not a valid PDF (missing %PDF header)."
+  ],
+  "bad_mime": [
+   false,
+   "Expected a PDF file (declared content type: 'image/png')."
+  ],
+  "empty": [
+   false,
+   "The file is empty."
+  ],
+  "good": [
+   true,
+   ""
+  ],
+  "good_upper_ext": [
+   true,
+   ""
+  ],
+  "magic_late": [
+   false,
+   "The file is not a valid PDF (missing %PDF header)."
+  ],
+  "no_filename": [
+   false,
+   "No file was uploaded."
+  ],
+  "no_mime": [
+   true,
+   ""
+  ],
+  "no_stream": [
+   false,
+   "Could not read the uploaded file."
+  ],
+  "none": [
+   false,
+   "No file was uploaded."
+  ],
+  "octet_mime_ok": [
+   true,
+   ""
+  ],
+  "too_big": [
+   false,
+   "File exceeds the 25 MB limit (25.0 MB)."
+  ],
+  "wrong_ext": [
+   false,
+   "Only PDF files are accepted."
+  ]
+ },
+ "weak_topic_diagnosis": {
+  "output": {
+   "overall": {
+    "attempted": 6,
+    "solve_rate": 50.0,
+    "solved": 3,
+    "stuck": 2
+   },
+   "recommendations": [
+    {
+     "difficulty": "Easy",
+     "problem_id": "dsa-dp-01",
+     "reason": "Weak topic: dynamic programming (solve rate 0.0%, stuck 1x).",
+     "title": "Climbing Stairs"
+    },
+    {
+     "difficulty": "Easy",
+     "problem_id": "dsa-dp-17",
+     "reason": "Weak topic: dynamic programming (solve rate 0.0%, stuck 1x).",
+     "title": "Min Cost Climbing Stairs"
+    },
+    {
+     "difficulty": "Easy",
+     "problem_id": "dsa-heaps-11",
+     "reason": "Weak topic: sorting (solve rate 0.0%, stuck 1x).",
+     "title": "The K Weakest Rows in a Matrix"
+    },
+    {
+     "difficulty": "Easy",
+     "problem_id": "dsa-sort-01",
+     "reason": "Weak topic: sorting (solve rate 0.0%, stuck 1x).",
+     "title": "Merge Sorted Array"
+    },
+    {
+     "difficulty": "Medium",
+     "problem_id": "dsa-arrays-04",
+     "reason": "Weak topic: prefix-suffix (solve rate 0.0%, stuck 0x).",
+     "title": "Product of Array Except Self"
+    },
+    {
+     "difficulty": "Easy",
+     "problem_id": "dsa-ll-09",
+     "reason": "Weak topic: two-pointers (solve rate 50.0%, stuck 1x).",
+     "title": "Palindrome Linked List"
+    },
+    {
+     "difficulty": "Easy",
+     "problem_id": "dsa-misc-11",
+     "reason": "Weak topic: two-pointers (solve rate 50.0%, stuck 1x).",
+     "title": "Happy Number (cycle detection)"
+    }
+   ],
+   "topics": [
+    {
+     "attempted": 1,
+     "solve_rate": 0.0,
+     "solved": 0,
+     "stuck": 1,
+     "stuck_rate": 100.0,
+     "topic": "dynamic programming"
+    },
+    {
+     "attempted": 1,
+     "solve_rate": 0.0,
+     "solved": 0,
+     "stuck": 1,
+     "stuck_rate": 100.0,
+     "topic": "sorting"
+    },
+    {
+     "attempted": 1,
+     "solve_rate": 0.0,
+     "solved": 0,
+     "stuck": 0,
+     "stuck_rate": 0.0,
+     "topic": "prefix-suffix"
+    },
+    {
+     "attempted": 2,
+     "solve_rate": 50.0,
+     "solved": 1,
+     "stuck": 1,
+     "stuck_rate": 50.0,
+     "topic": "two-pointers"
+    },
+    {
+     "attempted": 6,
+     "solve_rate": 50.0,
+     "solved": 3,
+     "stuck": 2,
+     "stuck_rate": 33.3,
+     "topic": "arrays"
+    },
+    {
+     "attempted": 1,
+     "solve_rate": 100.0,
+     "solved": 1,
+     "stuck": 0,
+     "stuck_rate": 0.0,
+     "topic": "hash maps"
+    },
+    {
+     "attempted": 2,
+     "solve_rate": 100.0,
+     "solved": 2,
+     "stuck": 0,
+     "stuck_rate": 0.0,
+     "topic": "greedy"
+    }
+   ]
+  },
+  "rows": [
+   {
+    "hints_used": 0,
+    "problem_id": "dsa-arrays-01",
+    "status": "solved"
+   },
+   {
+    "hints_used": 1,
+    "problem_id": "dsa-arrays-02",
+    "status": "solved"
+   },
+   {
+    "hints_used": 3,
+    "problem_id": "dsa-arrays-03",
+    "status": "stuck"
+   },
+   {
+    "hints_used": 2,
+    "problem_id": "dsa-arrays-04",
+    "status": "attempted"
+   },
+   {
+    "hints_used": 0,
+    "problem_id": "no-such-id",
+    "status": "solved"
+   },
+   {
+    "hints_used": 1,
+    "problem_id": "dsa-arrays-05",
+    "status": "stuck"
+   },
+   {
+    "hints_used": 0,
+    "problem_id": "dsa-arrays-06",
+    "status": "solved"
+   }
+  ]
+ },
+ "weak_topic_diagnosis_empty": {
+  "output": {
+   "overall": {
+    "attempted": 0,
+    "solve_rate": 0.0,
+    "solved": 0,
+    "stuck": 0
+   },
+   "recommendations": [],
+   "topics": []
+  },
+  "rows": []
+ }
+}

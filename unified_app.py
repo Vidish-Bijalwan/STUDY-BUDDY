@@ -31,7 +31,6 @@ if __name__ == "__main__" and "unified_app" not in sys.modules:
 from datetime import UTC, date, datetime, timedelta
 
 import requests
-from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv
 from flask import (
     Flask,
@@ -45,18 +44,14 @@ from flask import (
     session,
     url_for,
 )
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from flask_login import (
-    LoginManager,
     UserMixin,
     current_user,
     login_required,
     login_user,
-    logout_user,
+    # NOTE (ARC-01): logout_user moved with the auth blueprint; the one
+    # remaining module-level use (account_delete) imports it locally.
 )
-from flask_sqlalchemy import SQLAlchemy
-from flask_wtf import CSRFProtect
 from flask_wtf.csrf import CSRFError
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -96,6 +91,7 @@ from studybuddy.leetcode_integration import (
     render_leetcode_card_svg,
     validate_leetcode_username,
 )
+from studybuddy import eng_jd_v2, eng_jobs, eng_interview_v2  # ENG-07/11/12 v2 engines
 
 log = logging.getLogger("acra")
 
@@ -452,42 +448,13 @@ from studybuddy.star_builder import (
     validate_draft,
 )
 
-db = SQLAlchemy()
-# ARC-03: Alembic migrations via Flask-Migrate. Initialized in create_app().
-migrate = None  # set to Migrate() once flask-migrate is importable
-try:
-    from flask_migrate import Migrate as _Migrate
-    migrate = _Migrate()
-except ImportError:  # pragma: no cover - dev without flask-migrate
-    pass
-login_manager = LoginManager()
-csrf = CSRFProtect()
+# ARC-01: extension objects live in app/extensions.py now; imported back
+# here so the monolith keeps working during the strangler migration.
+from app.extensions import csrf, db, limiter, login_manager, migrate, oauth
 
-
-def _rate_limit_key():
-    """SEC-04: key by user id when authenticated, else client IP.
-
-    ProxyFix (x_for=1) runs before this, so remote_addr is the real client
-    behind Render's single proxy hop — not one global bucket for everyone.
-    """
-    try:
-        from flask_login import current_user
-        if current_user.is_authenticated:
-            return f"user:{current_user.get_id()}"
-    except Exception:
-        pass
-    return f"ip:{get_remote_address()}"
-
-
-# SEC-04: storage from env (memory:// dev/test; Redis in production via
-# RATELIMIT_STORAGE_URI). Global default limits + per-route limits.
-limiter = Limiter(
-    key_func=_rate_limit_key,
-    default_limits=["200 per day", "60 per hour"],
-    storage_uri=(__import__("os").environ.get("RATELIMIT_STORAGE_URI")
-                 or "memory://"),
-)
-oauth = OAuth()  # social login clients (registered per-app in create_app)
+# LLM-03: import for side effect — registers LLMUsage model with db so
+# db.create_all() covers llm_usage in dev/test (migration owns prod).
+import studybuddy.llm_ledger  # noqa: F401,E402
 
 
 # ========================================================
@@ -643,6 +610,8 @@ class JobApplication(db.Model):
     stage_updated_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC),
                                  nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC),  # ARC-04
+                           onupdate=lambda: datetime.now(UTC), nullable=True)
 
     user = db.relationship("User", backref=db.backref("job_applications", lazy="dynamic",
                                                       cascade="all, delete-orphan"))
@@ -907,7 +876,7 @@ class PaperImport(db.Model):
     pdf_url = db.Column(db.String(512))
     openalex_id = db.Column(db.String(64))
     source = db.Column(db.String(20))  # arxiv | openalex
-    fetched_at = db.Column(db.String(32))  # UTC ISO provenance timestamp
+    fetched_at = db.Column(db.DateTime(timezone=True))  # UTC provenance timestamp (ARC-04)
     data = db.Column(db.JSON)  # {"graph": {...}} cached citation graph
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
 
@@ -996,6 +965,8 @@ class Goal(db.Model):
     target_date = db.Column(db.Date, nullable=True)
     status = db.Column(db.String(20), default="active", nullable=False)  # active | done
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC),  # ARC-04
+                           onupdate=lambda: datetime.now(UTC), nullable=True)
 
     user = db.relationship("User", backref=db.backref("goals", lazy="dynamic",
                                                      cascade="all, delete-orphan"))
@@ -1564,6 +1535,8 @@ class HealthReview(db.Model):
     narrative = db.Column(db.Text)         # 2-3 plain sentences, no jargon
     next_action = db.Column(db.Text)      # single smallest high-leverage action
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC),  # ARC-04
+                           onupdate=lambda: datetime.now(UTC), nullable=True)
 
     __table_args__ = (db.UniqueConstraint("user_id", "month_key",
                                           name="uq_health_review_user_month"),)
@@ -2180,6 +2153,14 @@ def _store_snapshot(user_id, provider, username, data):
 def create_app(config_overrides=None):
     app = Flask(__name__)
 
+    # ARC-01/ARC-12: env-validated config (Development/Testing/Production).
+    # from_object only sets defaults; the explicit assignments below and
+    # config_overrides keep final say. Production fails fast on missing secrets.
+    from app.config import resolve_config, validate_for_env
+    _config_cls = resolve_config(config_overrides)
+    app.config.from_object(_config_cls)
+    validate_for_env(_config_cls)
+
     # --- SECRET_KEY policy (P1#7) ---
     # Refuse to boot in production without a real secret; in local dev use
     # an ephemeral key with a loud warning (sessions won't survive restarts).
@@ -2225,7 +2206,7 @@ def create_app(config_overrides=None):
         _is_sqlite = _db_url.startswith("sqlite")
         migrate.init_app(app, db, render_as_batch=_is_sqlite)
     login_manager.init_app(app)
-    login_manager.login_view = "login"
+    login_manager.login_view = "auth.login"  # ARC-01: auth blueprint endpoint
     login_manager.login_message_category = "info"
     # SEC-06: strong session protection (tracks user agent + IP, invalidates
     # the session on mismatch), 12h absolute lifetime, no sliding refresh.
@@ -2235,6 +2216,8 @@ def create_app(config_overrides=None):
     csrf.init_app(app)
     limiter.init_app(app)
     oauth.init_app(app)
+    from studybuddy.i18n import init_babel  # UX-05 i18n (lazy; no-op if Flask-Babel missing)
+    init_babel(app)
     if _google_configured():
         _register_google_oauth(app)
     if app.config.get("TESTING"):
@@ -2880,82 +2863,11 @@ def register_routes(app):
             "python": __import__("sys").version.split()[0],
         })
 
-    # ---------- AUTH ----------
-    @app.route('/register', methods=['GET', 'POST'])
-    @limiter.limit("20 per hour")  # SEC-04: stricter for auth endpoints
-    def register():
-        if current_user.is_authenticated:
-            return redirect(url_for('dashboard'))
-        error = None
-        if request.method == 'POST':
-            name = (request.form.get('name') or '').strip()
-            email = (request.form.get('email') or '').strip().lower()
-            password = request.form.get('password') or ''
-            age_confirm = request.form.get('age_confirm')
-            if not name or not email or not password:
-                error = 'Please fill in name, email and password.'
-            elif not age_confirm:
-                # PRIV-06: age gate
-                error = ('Please confirm you are at least 13 years old. '
-                         'If under 18, have a parent/guardian review our '
-                         'Privacy Policy and Terms with you.')
-            else:
-                pw_ok, pw_msg = check_password_policy(password)
-                if not pw_ok:
-                    error = pw_msg
-                elif '@' not in email or '.' not in email:
-                    error = 'Please enter a valid email address.'
-                elif User.query.filter_by(email=email).first():
-                    # Generic to avoid enumeration (SEC-09)
-                    error = 'An account with this email already exists. Please log in.'
-                else:
-                    user = User(name=name, email=email)
-                    user.set_password(password)
-                    db.session.add(user)
-                    db.session.commit()
-                    _rotate_session_on_login()
-                    login_user(user)
-                    flash(f'Welcome, {user.name}! Your account is ready.', 'success')
-                    return redirect(url_for('dashboard'))
-        return render_template('register.html', error=error,
-                               google_configured=_google_configured())
-
-    @app.route('/login', methods=['GET', 'POST'])
-    @limiter.limit("10 per hour")  # SEC-04: brute-force protection
-    def login():
-        if current_user.is_authenticated:
-            return redirect(url_for('dashboard'))
-        error = None
-        if request.method == 'POST':
-            email = (request.form.get('email') or '').strip().lower()
-            password = request.form.get('password') or ''
-            user = User.query.filter_by(email=email).first()
-            if user and user.check_password(password):
-                _rotate_session_on_login()
-                login_user(user, remember=bool(request.form.get('remember')))
-                # SEC-14: audit log (hashed id, no email/password)
-                log_security_event("login_success", user_id=user.id)
-                flash(f'Welcome back, {user.name}!', 'success')
-                nxt = request.args.get('next') or request.form.get('next')
-                return redirect(nxt if is_safe_next(nxt) else url_for('dashboard'))
-            # SEC-14: failed login — no email in the log (PII); only whether
-            # the account exists, which aids abuse detection.
-            log_security_event("login_failure", user_id=user.id if user else None,
-                               details={"account_exists": bool(user)})
-            error = 'Invalid email or password.'
-        return render_template('login.html', error=error,
-                               next=request.args.get('next', ''),
-                               google_configured=_google_configured())
-
-    @app.route('/logout', methods=['GET', 'POST'])
-    def logout():
-        # Sign-out must be a POST (CSRF-protected form) so a stray GET —
-        # e.g. a prefetched link — can never log the user out (P2#11).
-        if request.method == 'GET':
-            abort(405, description="Please use the Log out button to sign out.")
-        logout_user()
-        flash('You have been logged out.', 'info')
-        return redirect(url_for('index'))
+    # ---------- AUTH (ARC-01) ----------
+    # /register, /login, /logout now live in app/blueprints/auth_bp.py
+    # (identical URLs; endpoints pinned via explicit endpoint= names).
+    from app.blueprints.auth_bp import auth_bp
+    app.register_blueprint(auth_bp)
 
     # ---------- SEC-09: Email verification ----------
     @app.route('/verify-email/<token>')
@@ -2963,11 +2875,11 @@ def register_routes(app):
         user_id = verify_email_token(token, app.config['SECRET_KEY'])
         if not user_id:
             flash('This verification link is invalid or has expired.', 'error')
-            return redirect(url_for('login'))
+            return redirect(url_for('auth.login'))
         user = db.session.get(User, user_id)
         if not user:
             flash('Account not found.', 'error')
-            return redirect(url_for('login'))
+            return redirect(url_for('auth.login'))
         if not user.email_verified:
             user.email_verified = True
             user.email_verified_at = datetime.now(UTC)
@@ -3014,7 +2926,7 @@ def register_routes(app):
                 # TODO: send via email in production; flash for dev
                 flash(f'Reset link (dev): {link}', 'info')
             flash(done_msg, 'info')
-            return redirect(url_for('login'))
+            return redirect(url_for('auth.login'))
         return render_template('forgot_password.html')
 
     @app.route('/reset-password/<token>', methods=['GET', 'POST'])
@@ -3045,7 +2957,7 @@ def register_routes(app):
             log.info("password_reset_completed user_id_hash=%s",
                      _safe_user_ref_id(user.id))
             flash('Password updated. Please log in.', 'success')
-            return redirect(url_for('login'))
+            return redirect(url_for('auth.login'))
         return render_template('reset_password.html', token=token)
 
     # ---------- GOOGLE SIGN-IN (OAuth 2.0, only when configured) ----------
@@ -3069,7 +2981,7 @@ def register_routes(app):
             except Exception as e:
                 log.warning("Google OAuth token exchange failed: %r", e)
                 flash('Google sign-in failed. Please try again.', 'error')
-                return redirect(url_for('login'))
+                return redirect(url_for('auth.login'))
             try:
                 userinfo = oauth.google.userinfo()
             except Exception:
@@ -3078,12 +2990,12 @@ def register_routes(app):
                 except Exception as e:
                     log.warning("Google userinfo fetch failed: %r", e)
                     flash('Could not read your Google profile. Please try again.', 'error')
-                    return redirect(url_for('login'))
+                    return redirect(url_for('auth.login'))
             try:
                 user, is_new = _process_google_login(userinfo or {})
             except ValueError as e:
                 flash(str(e), 'error')
-                return redirect(url_for('login'))
+                return redirect(url_for('auth.login'))
             _rotate_session_on_login()
             login_user(user, remember=True)
             flash('Welcome{}!'.format(
@@ -5377,7 +5289,7 @@ def register_routes(app):
         """Render a single analysis result (anonymous DB row or saved DB row)."""
         if analysis_id.startswith('db-'):
             if not current_user.is_authenticated:
-                return redirect(url_for('login', next=request.path))
+                return redirect(url_for('auth.login', next=request.path))
             try:
                 row_id = int(analysis_id[3:])
             except ValueError:
@@ -5930,13 +5842,20 @@ def register_routes(app):
             'source': p.source} for p in papers])
 
     def _store_paper_import(meta):
+        # ARC-04: fetched_at is now DateTime(timezone=True); parse ISO strings.
+        _fetched = meta.get('fetched_at')
+        if isinstance(_fetched, str):
+            try:
+                _fetched = datetime.fromisoformat(_fetched.replace('Z', '+00:00'))
+            except ValueError:
+                _fetched = None
         paper = PaperImport(
             user_id=current_user.id, title=(meta.get('title') or 'Untitled')[:512],
             authors=meta.get('authors') or [], abstract=meta.get('abstract'),
             year=meta.get('year'), venue=meta.get('venue'), doi=meta.get('doi'),
             arxiv_id=meta.get('arxiv_id'), pdf_url=meta.get('pdf_url'),
             openalex_id=meta.get('openalex_id'), source=meta.get('source'),
-            fetched_at=meta.get('fetched_at'))
+            fetched_at=_fetched)
         db.session.add(paper)
         db.session.commit()
         return paper
@@ -7477,6 +7396,44 @@ def register_routes(app):
     @app.route('/api/topics')
     def api_topics():
         return jsonify(get_available_topics())
+
+    # ---------- ENG v2 engines (P2 batch) ----------
+    @app.route('/api/eng/jd-v2/match', methods=['POST'])
+    @limiter.limit("30 per hour")
+    def api_eng_jd_v2_match():
+        p = request.get_json(force=True) or {}
+        if len((p.get("jd_text") or "").strip()) < 50:
+            return jsonify({"error": "Paste a fuller job description (50+ characters)."}), 400
+        return jsonify(eng_jd_v2.match_jd_v2(
+            p.get("jd_text", ""), p.get("resume_text", ""),
+            p.get("resume_skills", []), p.get("resume_years", 0),
+            p.get("resume_education", [])))
+
+    @app.route('/api/eng/jobs/recommend', methods=['POST'])
+    @limiter.limit("30 per hour")
+    def api_eng_jobs_recommend():
+        p = request.get_json(force=True) or {}
+        return jsonify(eng_jobs.recommend_jobs(
+            p.get("cards", []), p.get("resume_skills", []),
+            p.get("resume_years", 0),
+            geography=p.get("geography"), level=p.get("level")))
+
+    @app.route('/api/eng/jobs/paste-jd', methods=['POST'])
+    @limiter.limit("30 per hour")
+    def api_eng_jobs_paste_jd():
+        p = request.get_json(force=True) or {}
+        return jsonify(eng_jobs.paste_jd_flow(
+            p.get("jd_text", ""), title=p.get("title", "Pasted role")))
+
+    @app.route('/api/eng/interview/score-v2', methods=['POST'])
+    @limiter.limit("30 per hour")
+    def api_eng_interview_score_v2():
+        p = request.get_json(force=True) or {}
+        res = eng_interview_v2.score_answer(
+            p.get("question", ""), p.get("answer", ""),
+            p.get("key_points", []))
+        # NEVER render res["score"] without res["rubric"] + res["improvements"]
+        return jsonify(res)
 
     @app.route('/api/chat_research', methods=['POST'])
     @limiter.limit("30 per hour")

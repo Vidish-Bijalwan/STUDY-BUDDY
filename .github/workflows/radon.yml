@@ -1,0 +1,29 @@
+# ARC-10: cyclomatic-complexity ratchet for new/changed code.
+#
+# Fails the build when a *changed* Python file introduces a function or method
+# with CC > 15 (radon). Pre-existing hotspots are grandfathered: the gate only
+# inspects files touched by the push/PR, so the ratchet only tightens.
+# ci.yml is intentionally untouched — this is a separate, additive check.
+name: Complexity gate (radon)
+
+on:
+  push:
+    branches: [main]
+    paths: ["studybuddy/**/*.py", "unified_app.py", "app/**/*.py"]
+  pull_request:
+    paths: ["studybuddy/**/*.py", "unified_app.py", "app/**/*.py"]
+
+jobs:
+  radon:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install radon
+        run: pip install radon
+      - name: Run complexity gate (CC > 15 fails, changed files only)
+        run: python scripts/radon_gate.py

@@ -59,6 +59,8 @@
         <div class="dsa-head">
             <h1>DSA <span class="gradient-text">Practice</span></h1>
             <p>{{ total }} problems across {{ topics|length }} topics. Filter, solve, reveal hints progressively — and check your <a href="{{ url_for('dsa_diagnosis') }}" style="color:var(--accent-primary);font-weight:700;">weak-topic diagnosis</a>.</p>
+            <!-- DATA-05: honesty label — this is a practice tracker, not an auto-judge -->
+            <p class="sb-card__meta"><span class="sb-badge sb-badge--rule">Practice tracker</span> Self-reported progress — not an auto-judge. Solve on the original platform; track here.</p>
         </div>
 
         <div class="dsa-card b-card b-reveal">
@@ -83,7 +85,7 @@
                 </div>
             </div>
             {% if not is_authed %}
-            <p class="dsa-cta"><a href="{{ url_for('login') }}">Log in</a> to save your progress and get weak-topic diagnosis.</p>
+            <p class="dsa-cta"><a href="{{ url_for('auth.login') }}">Log in</a> to save your progress and get weak-topic diagnosis.</p>
             {% endif %}
         </div>
 

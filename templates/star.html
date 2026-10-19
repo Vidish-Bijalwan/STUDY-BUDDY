@@ -87,7 +87,7 @@
 
         {% if not is_authed %}
         <div class="st-card st-login-cta">
-            <p><a href="{{ url_for('login', next='/star') }}">Log in</a> to score and save your STAR drafts.</p>
+            <p><a href="{{ url_for('auth.login', next='/star') }}">Log in</a> to score and save your STAR drafts.</p>
         </div>
         {% endif %}
 

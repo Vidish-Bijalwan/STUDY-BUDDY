@@ -1,0 +1,70 @@
+# ARC-11: weekly dataset refresh in CI (NOT a request-triggered thread).
+#
+# The opportunity auto-refresh daemon thread that used to spawn on page view
+# is removed (see docs/arc11-jobs.md). Instead, this workflow runs every week:
+#   1. fetch/prune the datasets (opportunities pipeline),
+#   2. validate them against data/schemas (DATA-01),
+#   3. link-check dataset URLs,
+#   4. open a pull request with the updated JSON (reviewed, versioned data).
+#
+# Data becomes reviewable and deploys with the app — nothing is rewritten on
+# the ephemeral Render filesystem at request time anymore.
+name: Weekly data refresh
+
+on:
+  schedule:
+    # Every Monday 02:00 UTC (07:30 IST).
+    - cron: "0 2 * * 1"
+  workflow_dispatch: {} # allow manual runs from the Actions tab
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install jsonschema
+
+      - name: Refresh datasets (fetch + prune)
+        # The opportunities pipeline validates sources, dedupes, expires past
+        # deadlines and prunes with --prune --write. Additional fetchers
+        # (salary, taxonomy) plug in here as they graduate from stubs.
+        run: |
+          python scripts/build_opportunities.py --prune --write
+          python scripts/build_skills_taxonomy.py
+
+      - name: Validate datasets (DATA-01 schemas + freshness)
+        run: python scripts/validate_data.py --strict
+
+      - name: Link-check dataset URLs
+        run: python scripts/check_links.py --report
+        continue-on-error: true # broken links warn; they don't block the PR
+
+      - name: Open pull request with refreshed data
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(data): weekly dataset refresh"
+          title: "chore(data): weekly dataset refresh"
+          body: |
+            Automated weekly dataset refresh (ARC-11).
+
+            - `scripts/build_opportunities.py --prune --write` (dedupe, expire, prune)
+            - `scripts/validate_data.py --strict` (DATA-01 schema + freshness)
+            - `scripts/check_links.py` (URL health; warnings only)
+
+            Review the diff, then merge — data deploys with the app.
+          branch: chore/weekly-data-refresh
+          delete-branch: true
+          labels: data-refresh, automated

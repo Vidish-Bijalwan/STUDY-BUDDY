@@ -177,6 +177,94 @@ _METRIC_PROMPTS = [
 ]
 
 
+_STAR_PART_ORDER = ["situation", "task", "action", "result"]
+_STAR_GAP_PROMPTS = {
+    "situation": "Add context: what was the situation? (team size, project, challenge)",
+    "task": "Add your goal: what were you trying to achieve?",
+    "action": "Add what YOU specifically did (verbs, tools, decisions).",
+    "result": "Add the outcome with a number: %, users, time saved, revenue.",
+}
+
+
+def _validate_bullet(bullet_text) -> str:
+    """Strip/validate raw input; raises ValueError like improve_bullet."""
+    bullet = _strip_html(bullet_text or "").strip()
+    if not bullet:
+        raise ValueError("Please enter a bullet to rewrite.")
+    if len(bullet) < BULLET_MIN_CHARS:
+        raise ValueError(
+            f"That bullet looks too short (minimum {BULLET_MIN_CHARS} characters).")
+    return bullet
+
+
+def _split_clauses(bullet: str) -> list:
+    """Split a bullet on sentence/clause boundaries for analysis."""
+    clauses = [c.strip() for c in re.split(r"[.;]|(?:\s+-\s+)", bullet) if c.strip()]
+    return clauses or [bullet]
+
+
+def _clause_score(part: str, clause: str, idx: int, n: int) -> float:
+    """Keyword clue score plus the positional prior for a STAR part."""
+    score = sum(len(re.findall(p, clause, re.I)) for p in _STAR_CLUES[part])
+    if part == "situation" and idx == 0:
+        score += 1
+    elif part == "result" and idx == n - 1:
+        score += 1
+    elif part == "action" and 0 < idx < n - 1:
+        score += 0.5
+    return score
+
+
+def _best_clause_for_part(part: str, clauses: list, used: set) -> str:
+    """Highest-scoring unused clause for one STAR part ("" when none)."""
+    best, best_score = "", 0
+    for i, clause in enumerate(clauses):
+        if i in used:
+            continue
+        score = _clause_score(part, clause, i, len(clauses))
+        if score > best_score:
+            best, best_score = clause, score
+    return best
+
+
+def _assign_star_parts(clauses: list) -> dict:
+    """Greedily assign each clause to its best STAR part.
+
+    Unassigned clauses fold into ``action`` (the core of a bullet).
+    """
+    parts = {p: "" for p in _STAR_PART_ORDER}
+    used = set()
+    for part in _STAR_PART_ORDER:
+        best = _best_clause_for_part(part, clauses, used)
+        if best:
+            parts[part] = best
+            used.add(clauses.index(best))
+    for i, clause in enumerate(clauses):
+        if i not in used:
+            parts["action"] = (parts["action"] + " " + clause).strip()
+    return parts
+
+
+def _rescue_task(parts: dict, bullet: str) -> None:
+    """Carve a task clause out of another part's text when task is empty."""
+    if parts["task"]:
+        return
+    m = re.search(r"\bi needed to ([^.]+)", bullet, re.I)
+    if not m:
+        m = re.search(r"\b(goal was|tasked with|aim was)\s+([^.]+)", bullet, re.I)
+    if not m:
+        return
+    task_text = (m.group(1) if m.lastindex == 1 else m.group(2)).strip()
+    if task_text:
+        parts["task"] = _capitalize_first(task_text.rstrip(". ")) + "."
+
+
+def _star_gaps(parts: dict) -> list:
+    """Gap prompts for whichever STAR parts are still empty."""
+    return [{"part": p, "prompt": _STAR_GAP_PROMPTS[p]}
+            for p in _STAR_PART_ORDER if not parts[p]]
+
+
 def star_convert(bullet_text):
     """Convert a flat bullet into Situation/Task/Action/Result parts.
 
@@ -185,72 +273,13 @@ def star_convert(bullet_text):
     on hostile input (ValueError only for empty/too-short, like improve_bullet).
     Returns {situation, task, action, result, gaps, star_bullet}.
     """
-    bullet = _strip_html(bullet_text or "").strip()
-    if not bullet:
-        raise ValueError("Please enter a bullet to rewrite.")
-    if len(bullet) < BULLET_MIN_CHARS:
-        raise ValueError(
-            f"That bullet looks too short (minimum {BULLET_MIN_CHARS} characters).")
-
-    # Split on sentence/clause boundaries for analysis.
-    clauses = [c.strip() for c in re.split(r"[.;]|(?:\s+-\s+)", bullet) if c.strip()]
-    if not clauses:
-        clauses = [bullet]
-
-    parts = {"situation": "", "task": "", "action": "", "result": ""}
-    used = set()
-    order = ["situation", "task", "action", "result"]
-    for part in order:
-        best, best_score = "", 0
-        for i, clause in enumerate(clauses):
-            if i in used:
-                continue
-            score = sum(len(re.findall(p, clause, re.I))
-                        for p in _STAR_CLUES[part])
-            # Positional prior: situation early, result late.
-            pos_bonus = 0
-            if part == "situation" and i == 0:
-                pos_bonus = 1
-            elif part == "result" and i == len(clauses) - 1:
-                pos_bonus = 1
-            elif part == "action" and 0 < i < len(clauses) - 1:
-                pos_bonus = 0.5
-            if score + pos_bonus > best_score:
-                best, best_score = clause, score + pos_bonus
-        if best:
-            parts[part] = best
-            used.add(clauses.index(best))
-
-    # Anything unassigned goes to action (the core of a bullet).
-    for i, clause in enumerate(clauses):
-        if i not in used:
-            parts["action"] = (parts["action"] + " " + clause).strip()
-            used.add(i)
-
-    # Rescue: if task is empty but another part's text contains a task
-    # clause ("needed to X", "goal was Y"), carve it out.
-    if not parts["task"]:
-        m = re.search(r"\bi needed to ([^.]+)", bullet, re.I)
-        if not m:
-            m = re.search(r"\b(goal was|tasked with|aim was)\s+([^.]+)", bullet, re.I)
-        if m:
-            task_text = (m.group(1) if m.lastindex == 1 else m.group(2)).strip()
-            if task_text:
-                parts["task"] = _capitalize_first(task_text.rstrip(". ")) + "."
-
-    gaps = []
-    prompts = {
-        "situation": "Add context: what was the situation? (team size, project, challenge)",
-        "task": "Add your goal: what were you trying to achieve?",
-        "action": "Add what YOU specifically did (verbs, tools, decisions).",
-        "result": "Add the outcome with a number: %, users, time saved, revenue.",
-    }
-    for part in order:
-        if not parts[part]:
-            gaps.append({"part": part, "prompt": prompts[part]})
-
+    bullet = _validate_bullet(bullet_text)
+    clauses = _split_clauses(bullet)
+    parts = _assign_star_parts(clauses)
+    _rescue_task(parts, bullet)
+    gaps = _star_gaps(parts)
     star_bullet = " ".join(
-        f"[{p[0].upper()}: {parts[p]}]" for p in order if parts[p])
+        f"[{p[0].upper()}: {parts[p]}]" for p in _STAR_PART_ORDER if parts[p])
     return {"situation": parts["situation"], "task": parts["task"],
             "action": parts["action"], "result": parts["result"],
             "gaps": gaps, "star_bullet": star_bullet,

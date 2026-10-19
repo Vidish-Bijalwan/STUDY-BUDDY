@@ -79,7 +79,7 @@
         <span id="plan-status" role="status" style="color:var(--b-muted);"></span>
         <div id="plan-result" style="margin-top:1.4rem;"></div>
         {% else %}
-        <p class="b-lede"><a href="{{ url_for('login') }}">Sign in</a> to generate and save a week-by-week study plan for this certification.</p>
+        <p class="b-lede"><a href="{{ url_for('auth.login') }}">Sign in</a> to generate and save a week-by-week study plan for this certification.</p>
         {% endif %}
     </div>
 </section>

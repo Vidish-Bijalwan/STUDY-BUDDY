@@ -561,6 +561,102 @@ def find_single_paper_topics(chunks_with_doc: Any) -> list[dict]:
 # 5. Next-paper suggestions (cache only — never touches the network)
 # ---------------------------------------------------------------------------
 
+def _coerce_max_n(max_n: Any) -> int:
+    """Coerce max_n to int; fall back to 8 on garbage."""
+    try:
+        return int(max_n)
+    except (TypeError, ValueError):
+        return 8
+
+
+def _coerce_lib_titles(library_titles: Any) -> list:
+    """Accept a single title string, a list/tuple, or anything else (-> [])."""
+    if isinstance(library_titles, str):
+        return [library_titles]
+    if isinstance(library_titles, (list, tuple)):
+        return list(library_titles)
+    return []
+
+
+def _imp_parts(imp: Any) -> tuple | None:
+    """Extract (user_id, title, graph) from a PaperImport-ish.
+
+    Returns None when the import is unusable or has no cached graph dict.
+    """
+    if not isinstance(imp, dict) and not hasattr(imp, "title"):
+        return None
+    if isinstance(imp, dict):
+        uid, title, data = imp.get("user_id"), imp.get("title"), imp.get("data")
+    else:
+        uid, title = getattr(imp, "user_id", None), getattr(imp, "title", None)
+        data = getattr(imp, "data", None)
+    title = title if isinstance(title, str) and title.strip() else "an imported paper"
+    graph = data.get("graph") if isinstance(data, dict) else None
+    if not isinstance(graph, dict):
+        return None
+    return uid, title, graph
+
+
+def _graph_nodes_edges(graph: dict) -> tuple | None:
+    """Validated (nodes, edges) pair, or None when nodes are unusable."""
+    nodes, edges = graph.get("nodes"), graph.get("edges")
+    if not isinstance(nodes, list) or not nodes:
+        return None
+    return nodes, edges if isinstance(edges, list) else []
+
+
+def _center_node_id(nodes: list) -> Any:
+    """Id of the ``is_center`` node, or None."""
+    for node in nodes:
+        if isinstance(node, dict) and node.get("is_center"):
+            return node.get("id")
+    return None
+
+
+def _edge_directions(edges: list, center_id: Any, imp_title: str) -> dict:
+    """Map neighbor id -> reason string from edge direction vs the center."""
+    direction: dict[Any, str] = {}
+    for edge in edges:
+        if not isinstance(edge, dict):
+            continue
+        frm, to = edge.get("from"), edge.get("to")
+        if center_id is None:
+            continue
+        if frm == center_id and to != center_id:
+            direction.setdefault(to, "Cited by '%s'" % imp_title)
+        elif to == center_id and frm != center_id:
+            direction.setdefault(frm, "References '%s'" % imp_title)
+    return direction
+
+
+def _node_suggestion(node: dict, center_id: Any, direction: dict,
+                     imp_title: str, lib_titles: list, seen: set) -> dict | None:
+    """Build one suggestion dict for a graph node, or None to skip it."""
+    if center_id is not None and node.get("id") == center_id:
+        return None
+    title = node.get("title")
+    if not isinstance(title, str) or not title.strip():
+        return None
+    norm = _title_norm(title)
+    if not norm or norm in seen:
+        return None
+    if _titles_match(title, imp_title):
+        return None
+    if any(_titles_match(title, lt) for lt in lib_titles):
+        return None
+    seen.add(norm)
+    year = node.get("year")
+    try:
+        year = int(year) if year is not None else None
+    except (TypeError, ValueError):
+        year = None
+    reason = direction.get(
+        node.get("id"),
+        "Appears in the citation graph of '%s'" % imp_title,
+    )
+    return {"title": title, "year": year, "reason": reason}
+
+
 def suggest_next_papers(
     user_id: Any,
     paper_imports: Any,
@@ -582,90 +678,37 @@ def suggest_next_papers(
     Never calls the network and never raises: imports without a cached
     graph contribute nothing, and no graphs at all means ``[]``.
     """
-    try:
-        max_n = int(max_n)
-    except (TypeError, ValueError):
-        max_n = 8
+    max_n = _coerce_max_n(max_n)
     if max_n <= 0:
         return []
     if not isinstance(paper_imports, (list, tuple)):
         return []
-    lib_titles = (
-        [library_titles]
-        if isinstance(library_titles, str)
-        else (list(library_titles) if isinstance(library_titles, (list, tuple)) else [])
-    )
+    lib_titles = _coerce_lib_titles(library_titles)
 
     suggestions: list[dict] = []
     seen: set[str] = set()
 
     for imp in paper_imports:
-        if not isinstance(imp, dict) and not hasattr(imp, "title"):
+        parts = _imp_parts(imp)
+        if parts is None:
             continue
-        imp_uid = imp.get("user_id") if isinstance(imp, dict) else getattr(
-            imp, "user_id", None)
+        imp_uid, imp_title, graph = parts
         if user_id is not None and imp_uid is not None and imp_uid != user_id:
             continue
-        imp_title = imp.get("title") if isinstance(imp, dict) else getattr(
-            imp, "title", None)
-        imp_title = imp_title if isinstance(imp_title, str) and imp_title.strip() \
-            else "an imported paper"
-        data = imp.get("data") if isinstance(imp, dict) else getattr(
-            imp, "data", None)
-        graph = data.get("graph") if isinstance(data, dict) else None
-        if not isinstance(graph, dict):
+        nodes_edges = _graph_nodes_edges(graph)
+        if nodes_edges is None:
             continue
-        nodes = graph.get("nodes")
-        edges = graph.get("edges")
-        if not isinstance(nodes, list) or not nodes:
-            continue
-        if not isinstance(edges, list):
-            edges = []
-
-        center_id = None
-        for node in nodes:
-            if isinstance(node, dict) and node.get("is_center"):
-                center_id = node.get("id")
-                break
-
-        direction: dict[Any, str] = {}
-        for edge in edges:
-            if not isinstance(edge, dict):
-                continue
-            frm, to = edge.get("from"), edge.get("to")
-            if center_id is not None and frm == center_id and to != center_id:
-                # Imported paper cites the neighbor.
-                direction.setdefault(to, "Cited by '%s'" % imp_title)
-            elif center_id is not None and to == center_id and frm != center_id:
-                # Neighbor cites the imported paper.
-                direction.setdefault(frm, "References '%s'" % imp_title)
-
+        nodes, edges = nodes_edges
+        center_id = _center_node_id(nodes)
+        direction = _edge_directions(edges, center_id, imp_title)
         for node in nodes:
             if not isinstance(node, dict):
                 continue
-            if center_id is not None and node.get("id") == center_id:
+            sug = _node_suggestion(node, center_id, direction, imp_title,
+                                   lib_titles, seen)
+            if sug is None:
                 continue
-            title = node.get("title")
-            if not isinstance(title, str) or not title.strip():
-                continue
-            norm = _title_norm(title)
-            if not norm or norm in seen:
-                continue
-            if _titles_match(title, imp_title):
-                continue
-            if any(_titles_match(title, lt) for lt in lib_titles):
-                continue
-            seen.add(norm)
-            year = node.get("year")
-            try:
-                year = int(year) if year is not None else None
-            except (TypeError, ValueError):
-                year = None
-            reason = direction.get(
-                node.get("id"),
-                "Appears in the citation graph of '%s'" % imp_title,
-            )
-            suggestions.append({"title": title, "year": year, "reason": reason})
+            suggestions.append(sug)
             if len(suggestions) >= max_n:
                 return suggestions
     return suggestions

@@ -13,7 +13,7 @@
         <p class="b-lede">Pick a skill, set your difficulty mix, and test yourself. Every answer comes with an instant explanation, and your final report diagnoses weak topics.</p>
     </div>
     {% if not is_authed %}
-    <div class="b-flash b-flash--info b-reveal"><a href="{{ url_for('login') }}">Sign in</a> to take quizzes — your history and best scores are saved to your account.</div>
+    <div class="b-flash b-flash--info b-reveal"><a href="{{ url_for('auth.login') }}">Sign in</a> to take quizzes — your history and best scores are saved to your account.</div>
     {% endif %}
 </section>
 

@@ -78,7 +78,7 @@
 
         {% if not is_authed %}
         <div class="iv-card iv-login-cta">
-            <p><a href="{{ url_for('login', next='/interview') }}">Log in</a> to start a mock interview and save your scored sessions.</p>
+            <p><a href="{{ url_for('auth.login', next='/interview') }}">Log in</a> to start a mock interview and save your scored sessions.</p>
         </div>
         {% endif %}
 

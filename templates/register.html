@@ -5,7 +5,7 @@
     <h1 style="font-family:'Outfit',sans-serif;font-size:2rem;margin-bottom:.5rem;">Create your <span class="b-grad">account</span></h1>
     <p style="color:var(--b-muted);margin-bottom:1.8rem;">Save resume analyses, track career goals, and keep research sessions &mdash; free for students.</p>
     {% if error %}<div class="b-flash b-flash--error" role="alert">{{ error }}</div>{% endif %}
-    <form method="POST" action="{{ url_for('register') }}">
+    <form method="POST" action="{{ url_for('auth.register') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="b-field">
             <label class="b-label" for="name">Full name</label>
@@ -36,6 +36,6 @@
         Continue with Google
     </a>
     {% endif %}
-    <p style="margin-top:1.4rem;color:var(--b-muted);font-size:.92rem;text-align:center;">Already have an account? <a href="{{ url_for('login') }}" style="color:var(--b-a3);font-weight:600;">Log in</a></p>
+    <p style="margin-top:1.4rem;color:var(--b-muted);font-size:.92rem;text-align:center;">Already have an account? <a href="{{ url_for('auth.login') }}" style="color:var(--b-a3);font-weight:600;">Log in</a></p>
 </div>
 {% endblock %}

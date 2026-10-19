@@ -81,7 +81,7 @@
 
         {% if not is_authed %}
         <div class="ap-card ap-login-cta">
-            <p><a href="{{ url_for('login', next='/aptitude') }}">Log in</a> to take timed tests and save your attempts.</p>
+            <p><a href="{{ url_for('auth.login', next='/aptitude') }}">Log in</a> to take timed tests and save your attempts.</p>
         </div>
         {% endif %}
 
