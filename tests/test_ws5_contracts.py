@@ -43,6 +43,27 @@ PUBLIC_POST_PROBES = {
         "/api/cite/bibtex/export", {"meta": {}}, 200, ["bibtex"]),
     "/api/cite/bibtex/import": (
         "/api/cite/bibtex/import", {}, 400, ["error"]),
+    "/api/eng/jd-v2/match": (
+        "/api/eng/jd-v2/match",
+        {"jd_text": "Python developer needed. " * 10,
+         "resume_text": "Python dev 3 years",
+         "resume_skills": ["python"], "resume_years": 3,
+         "resume_education": []},
+        200, ["score"]),
+    "/api/eng/jobs/recommend": (
+        "/api/eng/jobs/recommend",
+        {"cards": [], "resume_skills": ["python"], "resume_years": 3},
+        200, []),
+    "/api/eng/jobs/paste-jd": (
+        "/api/eng/jobs/paste-jd",
+        {"jd_text": "Python developer needed. " * 10, "title": "Test Role"},
+        200, ["title"]),
+    "/api/eng/interview/score-v2": (
+        "/api/eng/interview/score-v2",
+        {"question": "Tell me about yourself",
+         "answer": "I am a developer with three years of Python experience",
+         "key_points": ["communication"]},
+        200, ["score", "rubric", "improvements"]),
 }
 
 
@@ -65,8 +86,8 @@ def _operations(spec):
 def test_spec_well_formed():
     spec = _spec()
     ops = list(_operations(spec))
-    assert len(spec["paths"]) == 20, \
-        f"expected 20 /api/* paths, got {len(spec['paths'])}"
+    assert len(spec["paths"]) == 24, \
+        f"expected 24 /api/* paths, got {len(spec['paths'])}"
     for path, method, op in ops:
         assert path.startswith("/api/"), path
         assert op.get("x-flask-path"), f"{method} {path}: missing x-flask-path"
@@ -138,8 +159,13 @@ def test_public_post_shapes(client):
             f"{r.get_data(as_text=True)[:120]}"
         assert r.is_json, f"POST {url} did not return JSON"
         payload = r.get_json()
-        assert set(keys) <= set(payload), \
-            f"POST {url}: keys {sorted(payload)} missing {keys}"
+        if isinstance(payload, list):
+            assert isinstance(keys, list), f"POST {url}: list response"
+            # list responses: keys must be empty (nothing to check per-item here)
+            assert keys == [], f"POST {url}: list response with keys {keys}"
+        else:
+            assert set(keys) <= set(payload), \
+                f"POST {url}: keys {sorted(payload)} missing {keys}"
         if "error" in keys:
             assert isinstance(payload["error"], str) and payload["error"]
 

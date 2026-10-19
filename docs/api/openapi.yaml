@@ -137,6 +137,60 @@ paths:
                 properties:
                   problems: {type: array, items: {type: object}}
                   count: {type: integer}
+  /api/eng/jd-v2/match:
+    post:
+      tags: [eng]
+      summary: JD matcher v2 — match resume against a job description
+      x-flask-path: /api/eng/jd-v2/match
+      x-auth: public
+      x-response-keys: [score]
+      responses:
+        '200':
+          description: Match result with score, strengths, gaps, suggestions
+          content:
+            application/json:
+              schema: {type: object}
+        '400':
+          description: JD text too short (<50 chars)
+  /api/eng/jobs/recommend:
+    post:
+      tags: [eng]
+      summary: Recommend real job cards matched to resume skills
+      x-flask-path: /api/eng/jobs/recommend
+      x-auth: public
+      x-response-keys: []
+      responses:
+        '200':
+          description: Ranked job recommendations
+          content:
+            application/json:
+              schema: {type: object}
+  /api/eng/jobs/paste-jd:
+    post:
+      tags: [eng]
+      summary: Paste a JD to create a trackable job card
+      x-flask-path: /api/eng/jobs/paste-jd
+      x-auth: public
+      x-response-keys: [title]
+      responses:
+        '200':
+          description: Created job card
+          content:
+            application/json:
+              schema: {type: object}
+  /api/eng/interview/score-v2:
+    post:
+      tags: [eng]
+      summary: Interview answer scoring v2 with rubric
+      x-flask-path: /api/eng/interview/score-v2
+      x-auth: public
+      x-response-keys: [score, rubric, improvements]
+      responses:
+        '200':
+          description: Score with rubric and improvements (never render score alone)
+          content:
+            application/json:
+              schema: {type: object}
   /api/star/examples:
     get:
       tags: [practice]

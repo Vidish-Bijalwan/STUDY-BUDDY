@@ -92,8 +92,10 @@ def login(client, email="aarav@example.com", password="Str0ng!Test#2026"):
 
 @pytest.fixture(autouse=True)
 def _reset_ai_circuit():
-    """Reset AI gateway circuit breaker between tests (LLM-01 isolation)."""
+    """Reset AI gateway circuit breaker + prompt cache between tests (LLM-01/04 isolation)."""
     from studybuddy import ai_gateway
     ai_gateway._CIRCUIT.clear()
+    ai_gateway._CACHE.clear()
     yield
     ai_gateway._CIRCUIT.clear()
+    ai_gateway._CACHE.clear()
