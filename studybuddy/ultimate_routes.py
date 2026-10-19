@@ -89,6 +89,11 @@ def _load_fn(tool):
 
 def run_tool(tool_id, payload):
     """Execute one registered tool. Returns (result_dict, error_str)."""
+    # ARC-05: migrated tools dispatch through the typed allowlist first
+    # (pydantic-validated, no importlib/getattr). Legacy dict-dispatch below.
+    from studybuddy.labs_registry import is_migrated, run_typed_tool
+    if is_migrated(tool_id):
+        return run_typed_tool(tool_id, payload)
     tool = _TOOL_INDEX.get(tool_id)
     if not tool:
         return None, f"Unknown tool '{tool_id}'."

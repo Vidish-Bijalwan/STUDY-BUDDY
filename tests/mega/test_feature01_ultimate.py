@@ -10,7 +10,7 @@ import pytest
 from studybuddy.jd_matcher import (
     competitiveness_checklist,
     keyword_action_plan,
-    simulate_ai_screen,
+    illustrative_screening_checklist,
 )
 from tests.mega.harsh_corpus import HARSH_STRINGS
 
@@ -27,18 +27,18 @@ def _ok(fn, *args):
 
 @pytest.mark.parametrize("s", HARSH_STRINGS)
 def test_screen_never_crashes(s):
-    assert _ok(simulate_ai_screen, {}, s)
-    assert _ok(simulate_ai_screen, None, s)
+    assert _ok(illustrative_screening_checklist, {}, s)
+    assert _ok(illustrative_screening_checklist, None, s)
 
 
 @pytest.mark.parametrize("s", HARSH_STRINGS)
 def test_screen_score_bounds(s):
     try:
-        r = simulate_ai_screen({"matched_skills": ["python"]}, s)
+        r = illustrative_screening_checklist({"matched_skills": ["python"]}, s)
     except (ValueError, TypeError):
         return
     assert 0 <= r["score"] <= 100
-    assert r["verdict"]
+    assert r["illustrative_reading"]
     assert isinstance(r["signals"], list)
 
 
@@ -46,14 +46,14 @@ def test_screen_quantified_beats_vague():
     good = ("Led team of 5 engineers and shipped a feature used by 10k users, "
             "increasing revenue by 25% in 2023-2024. " * 8)
     bad = "Responsible for duties included helping with stuff. " * 8
-    g = simulate_ai_screen({"matched_skills": ["python"] * 5}, good)
-    b = simulate_ai_screen({"matched_skills": []}, bad)
+    g = illustrative_screening_checklist({"matched_skills": ["python"] * 5}, good)
+    b = illustrative_screening_checklist({"matched_skills": []}, bad)
     assert g["score"] > b["score"], f"{g['score']} vs {b['score']}"
 
 
 def test_screen_keyword_stuffing_penalized():
     stuffed = "python " * 300
-    r = simulate_ai_screen({"matched_skills": ["python"] * 60}, stuffed)
+    r = illustrative_screening_checklist({"matched_skills": ["python"] * 60}, stuffed)
     assert any(s["signal"] == "keyword stuffing suspected" for s in r["signals"])
 
 

@@ -10,10 +10,10 @@ TOOLS_A = [
     {
         "id": "jd/prescreen",
         "feature": "JD-Matched ATS Scoring",
-        "name": "AI Pre-Screen Simulator",
-        "description": "See your resume through an AI screening bot's eyes, scored 0-100.",
+        "name": "Illustrative Screening Checklist",
+        "description": "An illustrative checklist of resume signals — does not model any real ATS or recruiter decision.",
         "module": "studybuddy.jd_matcher",
-        "function": "simulate_ai_screen",
+        "function": "illustrative_screening_checklist",
         "fields": [
             {"name": "resume_text", "label": "Resume Text", "type": "textarea", "required": True},
             {"name": "report", "label": "ATS Report (JSON, from JD-Match scoring)", "type": "textarea", "required": True, "json": True},

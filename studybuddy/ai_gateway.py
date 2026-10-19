@@ -268,7 +268,23 @@ def _gemini_generate(prompt):
     return app_mod.call_gemini_direct(prompt)
 
 
-def generate(prompt, user_key=None, redact_pii=True):
+def _model_for(provider_name):
+    """Map a gateway provider key to the model id for the LLM ledger.
+
+    Gemini's model is discovered dynamically in unified_app, so we record
+    the provider key there (the ledger treats it as budgeting math anyway).
+    """
+    return {
+        "local": _LOCAL_MODEL,
+        "gemini": "gemini",  # dynamically discovered in unified_app
+        "groq": _GROQ_MODEL,
+        "openrouter": _OPENROUTER_MODEL,
+        "byok": _OPENROUTER_MODEL,
+    }.get(provider_name, provider_name)
+
+
+def generate(prompt, user_key=None, redact_pii=True,
+             _llm_user_id=None, _llm_feature="generate"):
     """Generate text via the first working provider.
 
     PRIV-05 modes:
@@ -281,7 +297,15 @@ def generate(prompt, user_key=None, redact_pii=True):
 
     LLM-06: PII is redacted from the prompt before sending to the provider
     (unless redact_pii=False and the caller has a specific need).
+
+    LLM-03: pass _llm_user_id (int) + _llm_feature (str) to enforce the
+    daily quota / monthly budget ledger. Raises QuotaExceeded when exhausted
+    (callers catch it and render the rule-based UX). When _llm_user_id is
+    None (system call / not logged in) the guard is a no-op.
     """
+    # LLM-03: quota/budget guard (no-op when _llm_user_id is None)
+    from studybuddy.llm_ledger import guard_llm_action, log_llm_action
+    guard_llm_action(_llm_user_id, _llm_feature)
     # LLM-06: Pre-LLM redaction
     redaction_map = {}
     if redact_pii:
@@ -347,6 +371,11 @@ def generate(prompt, user_key=None, redact_pii=True):
                 # LLM-04: cache successful responses
                 if use_cache:
                     _cache_put(prompt, text)
+                # LLM-03: ledger — record the successful call for quota/budget
+                log_llm_action(_llm_user_id, _llm_feature, provider=name,
+                               model=_model_for(name),
+                               prompt_chars=len(prompt),
+                               response_chars=len(text))
                 return text
             errors.append(f"{name}: empty response")
         except Exception as exc:
@@ -358,7 +387,8 @@ def generate(prompt, user_key=None, redact_pii=True):
 
 
 # LLM-02: Structured outputs with pydantic validation
-def generate_structured(prompt, schema_cls, user_key=None, max_repair=1):
+def generate_structured(prompt, schema_cls, user_key=None, max_repair=1,
+                        _llm_user_id=None, _llm_feature="generate_structured"):
     """Generate JSON conforming to a pydantic schema.
 
     Args:
@@ -381,7 +411,9 @@ def generate_structured(prompt, schema_cls, user_key=None, max_repair=1):
     last_err = None
     for attempt in range(max_repair + 1):
         try:
-            text = generate(full_prompt, user_key=user_key)
+            text = generate(full_prompt, user_key=user_key,
+                            _llm_user_id=_llm_user_id,
+                            _llm_feature=_llm_feature)
             # Strip markdown code fences if present
             text = text.strip()
             if text.startswith("```"):

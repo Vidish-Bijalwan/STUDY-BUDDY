@@ -297,12 +297,12 @@ def _strip_html(text):
     return re.sub(r"<[^>]*>", "", text or "")
 
 
-def simulate_ai_screen(report, resume_text):
-    """Score the resume the way AI pre-screening bots see it (0-100).
+def illustrative_screening_checklist(report, resume_text):
+    """Illustrative screening checklist (heuristic score 0-100).
 
-    Bots check: quantified achievements, action verbs, dated ranges,
-    skill density — and penalize passive phrasing, placeholders, gaps.
-    Returns a bot's-eye breakdown dict; never raises on hostile input.
+    Checks surface signals (quantified bullets, action verbs, placeholders).
+    This does NOT model any real ATS or recruiter decision.
+    Returns an illustrative breakdown dict; never raises on hostile input.
     """
     text = _strip_html(resume_text or "")
     lower = text.lower()
@@ -353,11 +353,16 @@ def simulate_ai_screen(report, resume_text):
                         "hits": 0, "tone": "negative"})
 
     score = max(0.0, min(100.0, round(score, 1)))
-    verdict = ("Likely to pass AI screening" if score >= 70
-               else "Borderline — bots may filter you out" if score >= 45
-               else "Likely to be filtered out by AI screening")
-    return {"score": score, "verdict": verdict, "signals": signals,
-            "word_count": words}
+    illustrative_reading = (
+        "Signals suggest a strong checklist pass" if score >= 70
+        else "Mixed signals — review the checklist below" if score >= 45
+        else "Several checklist flags to address")
+    return {"score": score, "illustrative_reading": illustrative_reading,
+            "signals": signals, "word_count": words,
+            "label": "Illustrative screening checklist",
+            "honest_label": True,
+            "disclaimer": ("Illustrative only — this heuristic does not model "
+                           "any real applicant-tracking system or recruiter decision.")}
 
 
 def keyword_action_plan(report, resume_text, sections=None):
