@@ -51,18 +51,26 @@ class TestByokStorage:
         assert rec.encrypted_key != "sk-test-secret-key-12345"
         assert rec.get_key() == "sk-test-secret-key-12345"
 
-    def test_ai_key_page_loads(self, client):
-        register(client, name="K User", email="key1@example.com",
-                 password="pw123456")
-        login(client, email="key1@example.com", password="pw123456")
+    def test_ai_key_page_loads(self, client, app):
+        from unified_app import User, db
+        with app.app_context():
+            u = User(name="K User", email="key1@example.com")
+            u.set_password("Str0ng!Pass1")
+            db.session.add(u)
+            db.session.commit()
+        login(client, email="key1@example.com", password="Str0ng!Pass1")
         r = client.get("/profile/ai-key")
         assert r.status_code == 200
         assert b"BYOK" in r.data
 
     def test_ai_key_save_and_remove(self, client, app):
-        register(client, name="K User", email="key2@example.com",
-                 password="pw123456")
-        login(client, email="key2@example.com", password="pw123456")
+        from unified_app import User, db
+        with app.app_context():
+            u = User(name="K User", email="key2@example.com")
+            u.set_password("Str0ng!Pass1")
+            db.session.add(u)
+            db.session.commit()
+        login(client, email="key2@example.com", password="Str0ng!Pass1")
         r = client.post("/profile/ai-key", data={
             "action": "save", "provider": "openrouter",
             "api_key": "sk-test-key-1234567890"})
