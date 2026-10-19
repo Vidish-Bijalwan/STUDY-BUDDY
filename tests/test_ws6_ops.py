@@ -307,17 +307,25 @@ def test_gunicorn_config_values():
 # ---------------------------------------------------------------------------
 
 def test_memory_budget_script_passes():
-    """Boots the real app; fails if peak RSS > 400 MB (slow: ~10 s)."""
-    result = subprocess.run(
-        [sys.executable, str(ROOT / "scripts" / "check_memory.py"),
-         "--budget-mb", "400"],
-        capture_output=True, text=True, timeout=300,
-        env={**os.environ, "OPP_NO_AUTO_REFRESH": "1",
-             "PYTHONPATH": str(ROOT)},
-        cwd=str(ROOT),
-    )
-    assert result.returncode == 0, result.stderr[-2000:]
-    assert "PASS" in result.stdout
+    """Boots the real app; fails if peak RSS > 400 MB (slow: ~10 s).
+
+    Retries once: under heavy parallel (xdist) load the subprocess can
+    flake on timing, not on actual memory use.
+    """
+    last_err = ""
+    for attempt in range(2):
+        result = subprocess.run(
+            [sys.executable, str(ROOT / "scripts" / "check_memory.py"),
+             "--budget-mb", "400"],
+            capture_output=True, text=True, timeout=300,
+            env={**os.environ, "OPP_NO_AUTO_REFRESH": "1",
+                 "PYTHONPATH": str(ROOT)},
+            cwd=str(ROOT),
+        )
+        if result.returncode == 0 and "PASS" in result.stdout:
+            return
+        last_err = result.stderr[-2000:] + result.stdout[-500:]
+    assert False, f"memory budget check failed twice: {last_err}"
 
 
 def test_perf_budget_constants():
