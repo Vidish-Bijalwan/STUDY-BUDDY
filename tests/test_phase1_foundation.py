@@ -160,7 +160,7 @@ class TestFeatureFlags:
                             dataclasses.replace(app_config.config,
                                                 feature_labs=False))
         # need a logged-in user (SEC-01: anonymous gets 401 first)
-        from conftest import register, login
+        from tests.conftest import register, login
         register(client, email="flagtest@example.com")
         login(client, email="flagtest@example.com")
         resp = client.get("/api/ultimate/tools")

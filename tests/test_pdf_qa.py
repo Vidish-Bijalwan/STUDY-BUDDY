@@ -13,7 +13,7 @@ import os
 import tempfile
 
 import pytest
-from conftest import make_pdf_bytes
+from tests.conftest import make_pdf_bytes
 
 from studybuddy.pdf_qa import (
     CHUNK_CAP,

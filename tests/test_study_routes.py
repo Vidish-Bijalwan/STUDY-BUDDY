@@ -6,7 +6,7 @@ failures. CSRF-enabled app fixture proves missing-token rejection.
 import io
 
 import pytest
-from conftest import login, make_pdf_bytes, register  # noqa: F401
+from tests.conftest import login, make_pdf_bytes, register  # noqa: F401
 
 from unified_app import PaperImport, StudyDoc, StudyQuestion, db
 

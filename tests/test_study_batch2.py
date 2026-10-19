@@ -6,7 +6,7 @@ Happy paths + the zero-error protocol: auth, invalid input, missing CSRF
 """
 
 
-from conftest import login, register  # noqa: F401
+from tests.conftest import login, register  # noqa: F401
 
 from unified_app import FlashcardSet, StudyDoc, User, db
 

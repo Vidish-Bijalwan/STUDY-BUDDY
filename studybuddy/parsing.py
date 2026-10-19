@@ -418,34 +418,46 @@ def parse_document(data: bytes, filename: str = "", kind: str = "resume") -> Par
 
     if os.environ.get("STUDYBUDDY_NO_PARSE_SANDBOX") == "1":
         # Test mode: parse in-process (no multiprocessing overhead)
-        if ftype == "pdf":
-            return extract_pdf(data, max_pages)
-        return extract_docx(data)
+        try:
+            if ftype == "pdf":
+                return extract_pdf(data, max_pages)
+            return extract_docx(data)
+        except ParseError:
+            raise
+        except Exception as e:
+            raise ParseError(f"Could not parse this file: {e}")
 
     # Use spawn (not fork): safe in multi-threaded processes like gunicorn
     # threaded workers or pytest-xdist. Queue carries the pickled result.
-    ctx = multiprocessing.get_context("spawn")
-    queue = ctx.Queue()
-    proc = ctx.Process(
-        target=_sandbox_target, args=(data, ftype, max_pages, queue),
-        daemon=True)
-    proc.start()
     try:
+        ctx = multiprocessing.get_context("spawn")
+        queue = ctx.Queue()
+        proc = ctx.Process(
+            target=_sandbox_target, args=(data, ftype, max_pages, queue),
+            daemon=True)
+        proc.start()
         try:
-            status, payload = queue.get(timeout=PARSE_TIMEOUT_S)
-        except Exception:
-            proc.terminate()
-            proc.join(timeout=2)
-            raise ParseError(
-                "Parsing timed out — this file is too complex. "
-                "Try a simpler export.")
-        if status == "ok":
-            return payload
-        raise ParseError(payload)
-    finally:
-        if proc.is_alive():
-            proc.terminate()
-            proc.join(timeout=2)
+            try:
+                status, payload = queue.get(timeout=PARSE_TIMEOUT_S)
+            except Exception:
+                proc.terminate()
+                proc.join(timeout=2)
+                raise ParseError(
+                    "Parsing timed out — this file is too complex. "
+                    "Try a simpler export.")
+            if status == "ok":
+                return payload
+            raise ParseError(payload)
+        finally:
+            if proc.is_alive():
+                proc.terminate()
+                proc.join(timeout=2)
+    except ParseError:
+        raise
+    except Exception as e:
+        # lxml can raise non-Exception subclasses or have races under load;
+        # normalize everything to ParseError for a clean API contract.
+        raise ParseError(f"Could not parse this file: {e}")
 
 
 # ---------------------------------------------------------------------------
