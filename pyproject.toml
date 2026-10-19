@@ -71,3 +71,14 @@ omit = ["*/tests/*", "*/test_*"]
 [tool.bandit]
 exclude_dirs = ["tests", "archive", "docs"]
 skips = ["B101"]  # assert usage is fine in this codebase's tests
+
+[tool.mutmut]
+# TEST-10: mutation testing for parsing/taxonomy logic.
+# Target mutation score > 70% on these modules (roadmap TEST-10).
+source_paths = ["studybuddy/parsing.py", "studybuddy/skills_taxonomy.py"]
+# Fast, deterministic suites that exercise the mutated modules.
+pytest_add_cli_args_test_selection = [
+  "tests/test_ws5_property.py",
+  "tests/test_skills_taxonomy.py",
+  "tests/test_phase1_parsing.py",
+]

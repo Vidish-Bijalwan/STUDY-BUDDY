@@ -1,0 +1,43 @@
+# TEST-07: End-to-end browser tests (Playwright, Python).
+#
+# Runs the critical journeys (signup -> resume upload -> readiness report,
+# tracker add/move, delete account) against a real local instance with a
+# real Chromium. Screenshots are uploaded as artifacts on failure.
+#
+# The tests skip gracefully when Playwright browsers cannot be installed
+# (documented in docs/testing/e2e.md) — a skip is a signal, not a pass.
+name: E2E
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  OPP_NO_AUTO_REFRESH: "1"
+  STUDYBUDDY_NO_PARSE_SANDBOX: "1"
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  e2e:
+    name: Playwright e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install --require-hashes -r requirements-dev.txt
+      - run: python -m playwright install chromium --with-deps
+      - run: python -m pytest tests/e2e/ -p no:cacheprovider -v
+      - name: Upload failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: e2e-failure-screenshots
+          path: /tmp/e2e-fail-*.png
+          if-no-files-found: ignore

@@ -10,3 +10,5 @@ pre-commit
 flask-migrate  # also in requirements.in (needed for flask db in prod)
 pytest-cov
 mypy
+hypothesis
+mutmut==3.8.0  # TEST-10

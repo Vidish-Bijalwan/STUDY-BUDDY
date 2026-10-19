@@ -1,0 +1,545 @@
+# TEST-13: Study-Buddy internal JSON API — contract spec v1.
+#
+# HAND-WRITTEN and honest: there is no PROD-09 public API / OpenAPI
+# generator in the codebase, so this spec was written by reading the
+# route handlers in unified_app.py and studybuddy/ultimate_routes.py
+# (2026-10-19). Every path here is cross-checked by
+# tests/test_ws5_contracts.py:
+#   * the path+method exists in app.url_map (see x-flask-path),
+#   * auth endpoints return 401 + {"error": str} when unauthenticated,
+#   * safe public GETs return the documented top-level keys
+#     (see x-response-keys),
+#   * error bodies match the {"error": "<user_message>"} shape from
+#     studybuddy/exceptions.py.
+#
+# Auth: session cookie (Flask-Login). LLM/network-backed endpoints are
+# documented for their auth + error contracts only — their success
+# bodies depend on external services and are NOT asserted in tests.
+# Follow-up: schemathesis fuzzing against this spec (roadmap TEST-13).
+openapi: 3.0.3
+info:
+  title: Study-Buddy Internal JSON API
+  version: "1.0.0-contract-v1"
+  description: >
+    Hand-written contract for the /api/* JSON endpoints (contract-testing
+    v1). Auth levels mirror tests/route_policy.yaml. Success bodies of
+    LLM/network-backed endpoints are documented from code, not asserted.
+servers:
+  - url: http://127.0.0.1:5000
+    description: local dev
+security:
+  - sessionCookie: []
+tags:
+  - name: practice
+  - name: resume
+  - name: citation
+  - name: research
+  - name: lab
+paths:
+  # ---------------------------------------------------------------- practice
+  /api/companies:
+    get:
+      tags: [practice]
+      summary: Companies with interview/coding questions
+      x-flask-path: /api/companies
+      x-auth: public
+      x-response-keys: [interview, coding]
+      responses:
+        '200':
+          description: Company lists
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [interview, coding]
+                properties:
+                  interview: {type: array, items: {type: string}}
+                  coding: {type: array, items: {type: string}}
+  /api/topics:
+    get:
+      tags: [practice]
+      summary: Coding-practice topics
+      x-flask-path: /api/topics
+      x-auth: public
+      x-response-keys: []
+      responses:
+        '200':
+          description: Topic list (JSON array)
+          content:
+            application/json:
+              schema: {type: array, items: {type: string}}
+  /api/coding-practice:
+    get:
+      tags: [practice]
+      summary: Coding questions, optional company filter
+      x-flask-path: /api/coding-practice
+      x-auth: public
+      x-response-keys: []
+      parameters:
+        - {name: topic, in: query, schema: {type: string}}
+        - {name: difficulty, in: query, schema: {type: string}}
+      responses:
+        '200':
+          description: Question list (JSON array)
+          content:
+            application/json:
+              schema: {type: array, items: {type: object}}
+  /api/coding-practice/{company}:
+    get:
+      tags: [practice]
+      summary: Coding questions for one company
+      x-flask-path: /api/coding-practice/<company>
+      x-auth: public
+      x-response-keys: []
+      parameters:
+        - {name: company, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Question list (JSON array)
+          content:
+            application/json:
+              schema: {type: array, items: {type: object}}
+  /api/interview-questions/{company}:
+    get:
+      tags: [practice]
+      summary: Interview questions for one company
+      x-flask-path: /api/interview-questions/<company>
+      x-auth: public
+      x-response-keys: []
+      parameters:
+        - {name: company, in: path, required: true, schema: {type: string}}
+        - {name: category, in: query, schema: {type: string}}
+        - {name: difficulty, in: query, schema: {type: string}}
+      responses:
+        '200':
+          description: Question list (JSON array)
+          content:
+            application/json:
+              schema: {type: array, items: {type: object}}
+  /api/dsa/problems:
+    get:
+      tags: [practice]
+      summary: DSA problem list with filters
+      x-flask-path: /api/dsa/problems
+      x-auth: public
+      x-response-keys: [problems, count]
+      parameters:
+        - {name: topic, in: query, schema: {type: string}}
+        - {name: difficulty, in: query, schema: {type: string}}
+      responses:
+        '200':
+          description: Problems + count (my_status added when logged in)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [problems, count]
+                properties:
+                  problems: {type: array, items: {type: object}}
+                  count: {type: integer}
+  /api/star/examples:
+    get:
+      tags: [practice]
+      summary: Annotated STAR examples
+      x-flask-path: /api/star/examples
+      x-auth: public
+      x-response-keys: [examples, count]
+      parameters:
+        - {name: competency, in: query, schema: {type: string}}
+      responses:
+        '200':
+          description: Examples + count
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [examples, count]
+                properties:
+                  examples: {type: array, items: {type: object}}
+                  count: {type: integer}
+        '400': {$ref: '#/components/responses/BadRequest'}
+  # ------------------------------------------------------------------ resume
+  /api/parse_preview:
+    post:
+      tags: [resume]
+      summary: Parse an uploaded resume, return extracted text + fields
+      x-flask-path: /api/parse_preview
+      x-auth: public
+      x-auth-note: observed public (no auth check in handler); route_policy.yaml says auth
+      x-response-keys: [text, text_truncated, fields, layout, quality, warnings]
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: {type: string, format: binary}
+      responses:
+        '200':
+          description: Extracted text and detected fields
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [text, text_truncated, fields, layout, quality, warnings]
+                properties:
+                  text: {type: string}
+                  text_truncated: {type: boolean}
+                  fields: {type: object}
+                  layout: {type: object}
+                  quality: {type: object}
+                  warnings: {type: array, items: {type: string}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+  # ---------------------------------------------------------------- citation
+  /api/cite/format:
+    post:
+      tags: [citation]
+      summary: Format one citation in a style
+      x-flask-path: /api/cite/format
+      x-auth: public
+      x-auth-note: observed public (no auth check in handler); route_policy.yaml says auth
+      x-response-keys: [citation, style]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [meta, style]
+              properties:
+                meta: {type: object}
+                style: {type: string, enum: [apa, mla, chicago, ieee, vancouver]}
+      responses:
+        '200':
+          description: Formatted citation
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [citation, style]
+                properties:
+                  citation: {type: string}
+                  style: {type: string}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+  /api/cite/bibtex/export:
+    post:
+      tags: [citation]
+      summary: Export metadata as BibTeX
+      x-flask-path: /api/cite/bibtex/export
+      x-auth: public
+      x-auth-note: observed public (no auth check in handler); route_policy.yaml says auth
+      x-response-keys: [bibtex]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [meta]
+              properties:
+                meta: {type: object}
+      responses:
+        '200':
+          description: BibTeX entry
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [bibtex]
+                properties:
+                  bibtex: {type: string}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+  /api/cite/bibtex/import:
+    post:
+      tags: [citation]
+      summary: Parse pasted BibTeX into metadata
+      x-flask-path: /api/cite/bibtex/import
+      x-auth: public
+      x-auth-note: observed public (no auth check in handler); route_policy.yaml says auth
+      x-response-keys: [metas]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: {type: string}
+      responses:
+        '200':
+          description: Parsed metadata entries
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [metas]
+                properties:
+                  metas: {type: array, items: {type: object}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+  /api/cite/guide/{style}:
+    get:
+      tags: [citation]
+      summary: In-app style-guide reference for one citation style
+      x-flask-path: /api/cite/guide/<style>
+      x-auth: public
+      x-auth-note: observed public (no auth check in handler); route_policy.yaml says auth
+      x-response-keys: [in_text]
+      parameters:
+        - {name: style, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Style guide (object; shape from studybuddy.citation_fmt)
+          content:
+            application/json:
+              schema: {type: object}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+  # ----------------------------------------------------------------- research
+  /api/chat_research:
+    post:
+      tags: [research]
+      summary: Document-intelligence chat (LLM-backed, quota-checked)
+      x-flask-path: /api/chat_research
+      x-auth: auth
+      x-response-keys: [response]
+      x-success-shape: from-code-only
+      x-response-keys: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message: {type: string}
+                document_text: {type: string}
+                history: {type: array, items: {type: object}}
+      responses:
+        '200':
+          description: Model reply (shape documented from code; not asserted)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response: {type: string}
+                  research_session_id: {type: string}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+  /api/study/import/arxiv:
+    post:
+      tags: [research]
+      summary: Import a paper by arXiv ID (network-backed)
+      x-flask-path: /api/study/import/arxiv
+      x-auth: auth
+      x-success-shape: from-code-only
+      x-response-keys: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [arxiv_id]
+              properties:
+                arxiv_id: {type: string, example: "1706.03762"}
+      responses:
+        '200':
+          description: Normalized paper metadata (network-backed; not asserted)
+          content:
+            application/json:
+              schema: {type: object}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '502': {$ref: '#/components/responses/BadGateway'}
+  /api/study/import/doi:
+    post:
+      tags: [research]
+      summary: Import a paper by DOI (network-backed)
+      x-flask-path: /api/study/import/doi
+      x-auth: auth
+      x-success-shape: from-code-only
+      x-response-keys: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [doi]
+              properties:
+                doi: {type: string, example: "10.1038/nature12373"}
+      responses:
+        '200':
+          description: Normalized paper metadata (network-backed; not asserted)
+          content:
+            application/json:
+              schema: {type: object}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '502': {$ref: '#/components/responses/BadGateway'}
+  /api/study/import/{openalex_id}/graph:
+    get:
+      tags: [research]
+      summary: Citation graph around an imported paper (network-backed)
+      x-flask-path: /api/study/import/<path:openalex_id>/graph
+      x-auth: auth
+      x-success-shape: from-code-only
+      x-response-keys: []
+      parameters:
+        - {name: openalex_id, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Citation graph (network-backed; not asserted)
+          content:
+            application/json:
+              schema: {type: object}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '502': {$ref: '#/components/responses/BadGateway'}
+  /api/study/import/pdf:
+    post:
+      tags: [research]
+      summary: Fetch an imported paper's PDF into the study library
+      x-flask-path: /api/study/import/pdf
+      x-auth: auth
+      x-success-shape: from-code-only
+      x-response-keys: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pdf_url]
+              properties:
+                pdf_url: {type: string}
+                title: {type: string}
+                arxiv_id: {type: string}
+                doi: {type: string}
+      responses:
+        '200':
+          description: Import result (network-backed; not asserted)
+          content:
+            application/json:
+              schema: {type: object}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+  /api/constructor_generate:
+    post:
+      tags: [research]
+      summary: Generate a paper draft section (LLM-backed)
+      x-flask-path: /api/constructor_generate
+      x-auth: auth
+      x-success-shape: from-code-only
+      x-response-keys: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object}
+      responses:
+        '200':
+          description: Generated draft (LLM-backed; not asserted)
+          content:
+            application/json:
+              schema: {type: object}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '502': {$ref: '#/components/responses/BadGateway'}
+  # ---------------------------------------------------------------------- lab
+  /api/ultimate/tools:
+    get:
+      tags: [lab]
+      summary: List Ultimate Lab tools
+      x-flask-path: /api/ultimate/tools
+      x-auth: auth
+      x-response-keys: [ok, count, tools]
+      responses:
+        '200':
+          description: Tool catalogue
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, count, tools]
+                properties:
+                  ok: {type: boolean}
+                  count: {type: integer}
+                  tools: {type: array, items: {type: object}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /api/ultimate/run/{tool_id}:
+    post:
+      tags: [lab]
+      summary: Run one Ultimate Lab tool
+      x-flask-path: /api/ultimate/run/<path:tool_id>
+      x-auth: auth
+      x-response-keys: [ok]
+      parameters:
+        - {name: tool_id, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object}
+      responses:
+        '200':
+          description: Tool result envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok: {type: boolean}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '413': {$ref: '#/components/responses/PayloadTooLarge'}
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: session
+  schemas:
+    Error:
+      description: >
+        Standard error envelope. Matches studybuddy/exceptions.py —
+        every API error returns {"error": "<user-safe message>"} with the
+        exception's status_code.
+      type: object
+      required: [error]
+      properties:
+        error: {type: string}
+      example: {error: "Please log in to continue."}
+  responses:
+    BadRequest:
+      description: Invalid input
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    Unauthorized:
+      description: Login required
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    Forbidden:
+      description: Feature disabled / not allowed
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    BadGateway:
+      description: Upstream service failed
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    PayloadTooLarge:
+      description: Request body too large
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
