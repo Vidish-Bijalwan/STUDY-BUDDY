@@ -9,7 +9,8 @@ import re
 
 class TestRateLimitKeying:
     def test_key_prefers_user_id_when_authenticated(self, client, app):
-        from unified_app import _rate_limit_key, User, db
+        from app.extensions import _rate_limit_key  # ARC-01: moved
+        from unified_app import User, db
         from flask_login import login_user
         with app.app_context():
             user = User(name="kuser", email="k1@example.com")
@@ -22,7 +23,7 @@ class TestRateLimitKeying:
             assert _rate_limit_key() == f"user:{uid}"
 
     def test_key_falls_back_to_ip_when_anonymous(self, client):
-        from unified_app import _rate_limit_key
+        from app.extensions import _rate_limit_key  # ARC-01: moved
         with client.application.test_request_context(
                 "/", environ_base={"REMOTE_ADDR": "9.9.9.9"}):
             key = _rate_limit_key()
@@ -30,8 +31,9 @@ class TestRateLimitKeying:
 
     def test_limiter_has_global_defaults_and_storage_uri(self):
         import inspect
-        import unified_app as ua
-        src = inspect.getsource(ua)
+        # ARC-01: limiter moved to app/extensions.py (strangler pattern)
+        from app import extensions as ext
+        src = inspect.getsource(ext)
         # SEC-04: global defaults + env-driven storage + user-aware key func
         assert '"200 per day"' in src and '"60 per hour"' in src
         assert 'RATELIMIT_STORAGE_URI' in src
