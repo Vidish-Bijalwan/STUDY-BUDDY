@@ -3,63 +3,87 @@
 Replaces the one-regex-per-skill loop in models/skill_extractor.py with a
 single compiled alternation regex over all aliases (803 unique aliases).
 
+ARC-14: the taxonomy JSON, the alias/skill indexes, and the compiled regex
+used to be module-level ``_FOO = None`` globals mutated with no lock.
+They are now lock-protected lazy singletons via :mod:`studybuddy.arc_state`
+(``get_or_init``) — identical public API, thread-safe first build, and
+resettable in tests via ``arc_state.reset_singleton(...)``.
+
 Public API:
     load_taxonomy()        -> the parsed taxonomy dict
     normalize_skill(text)  -> canonical skill name or None
     extract_skills_fast(text) -> [{"name": ..., "category": ...}, ...]
     get_parent(name)       -> parent skill name or None
     get_related(name)      -> list of related skill names
+    get_category(name)     -> category string or None
 """
 import json
 import os
 import re
 
+from studybuddy.arc_state import get_or_init
+
 _TAXONOMY_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
     "data", "taxonomy", "skills_taxonomy.json")
 
-_taxonomy = None
-_alias_index = None   # alias (lower) -> canonical name
-_skill_index = None   # canonical name -> skill entry
-_compiled_re = None
+# ARC-14 singleton keys (stable — tests reset by these keys).
+_TAXONOMY_KEY = "skills_taxonomy.taxonomy"
+_INDEXES_KEY = "skills_taxonomy.indexes"
+_REGEX_KEY = "skills_taxonomy.compiled_re"
+
+
+def _load_taxonomy_file():
+    """Factory: parse the taxonomy JSON (runs once per process)."""
+    with open(_TAXONOMY_PATH, encoding="utf-8") as f:
+        return json.load(f)
 
 
 def load_taxonomy():
     """Load (and cache) the taxonomy JSON."""
-    global _taxonomy
-    if _taxonomy is None:
-        with open(_TAXONOMY_PATH, encoding="utf-8") as f:
-            _taxonomy = json.load(f)
-    return _taxonomy
+    return get_or_init(_TAXONOMY_KEY, _load_taxonomy_file)
 
 
-def _build_indexes():
-    global _alias_index, _skill_index
-    if _alias_index is not None:
-        return
+def _build_indexes_data():
+    """Factory: build alias->canonical and canonical->entry index dicts."""
     tax = load_taxonomy()
-    _alias_index = {}
-    _skill_index = {}
+    alias_index = {}
+    skill_index = {}
     for skill in tax["skills"]:
         name = skill["name"]
-        _skill_index[name] = skill
+        skill_index[name] = skill
         for alias in skill["aliases"]:
             # first writer wins (deterministic, CSV order)
-            _alias_index.setdefault(alias.lower(), name)
+            alias_index.setdefault(alias.lower(), name)
+    return {"alias": alias_index, "skill": skill_index}
 
 
-def _build_regex():
-    global _compiled_re
-    if _compiled_re is not None:
-        return _compiled_re
-    _build_indexes()
+def _indexes():
+    """Return the (alias_index, skill_index) singleton pair."""
+    data = get_or_init(_INDEXES_KEY, _build_indexes_data)
+    return data["alias"], data["skill"]
+
+
+def _build_regex_data():
+    """Factory: compile the one-regex alternation over all aliases."""
+    alias_index, _ = _indexes()
     # longest-first so "react.js" beats "react", "c++" beats "c"
-    aliases = sorted(_alias_index.keys(), key=len, reverse=True)
+    aliases = sorted(alias_index.keys(), key=len, reverse=True)
     pattern = (r"(?<![a-zA-Z0-9+#.])("
                + "|".join(re.escape(a) for a in aliases)
                + r")(?![a-zA-Z0-9])")
-    _compiled_re = re.compile(pattern, re.IGNORECASE)
-    return _compiled_re
+    return re.compile(pattern, re.IGNORECASE)
+
+
+def _compiled_regex():
+    """Return the cached compiled skill-matching regex."""
+    return get_or_init(_REGEX_KEY, _build_regex_data)
+
+
+# Backward-compat alias: pre-existing tests (tests/test_skills_taxonomy.py)
+# call the old internal name. Same behavior — returns the single compiled
+# alternation regex (ARC-14 only changed how it is cached, not what it is).
+_build_regex = _compiled_regex
 
 
 def normalize_skill(text):
@@ -74,8 +98,8 @@ def normalize_skill(text):
     """
     if not text or not isinstance(text, str):
         return None
-    _build_indexes()
-    return _alias_index.get(text.strip().lower())
+    alias_index, _ = _indexes()
+    return alias_index.get(text.strip().lower())
 
 
 def extract_skills_fast(text):
@@ -87,12 +111,13 @@ def extract_skills_fast(text):
     """
     if not text:
         return []
-    rx = _build_regex()
+    rx = _compiled_regex()
+    alias_index, skill_index = _indexes()
     found = {}
     for m in rx.finditer(text):
-        canonical = _alias_index.get(m.group(1).lower())
+        canonical = alias_index.get(m.group(1).lower())
         if canonical:
-            entry = _skill_index[canonical]
+            entry = skill_index[canonical]
             found[canonical] = entry["category"]
     result = [{"name": name, "category": cat}
               for name, cat in found.items()]
@@ -102,20 +127,20 @@ def extract_skills_fast(text):
 
 def get_parent(name):
     """Return the parent skill name, or None."""
-    _build_indexes()
-    entry = _skill_index.get(name)
+    _, skill_index = _indexes()
+    entry = skill_index.get(name)
     return entry.get("parent") if entry else None
 
 
 def get_related(name):
     """Return related skill names (may be empty)."""
-    _build_indexes()
-    entry = _skill_index.get(name)
+    _, skill_index = _indexes()
+    entry = skill_index.get(name)
     return list(entry.get("related", [])) if entry else []
 
 
 def get_category(name):
     """Return the category of a canonical skill name, or None."""
-    _build_indexes()
-    entry = _skill_index.get(name)
+    _, skill_index = _indexes()
+    entry = skill_index.get(name)
     return entry.get("category") if entry else None
