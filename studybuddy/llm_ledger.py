@@ -163,7 +163,11 @@ def log_llm_action(user_id, feature, provider="", model="",
     When token counts are unknown (the gateway doesn't parse usage from most
     providers), they are estimated from character counts (~4 chars/token);
     pass explicit counts when available.
+
+    Anonymous/system calls (user_id None) are not metered: no-op.
     """
+    if user_id is None:
+        return None
     if not tokens_in and prompt_chars:
         tokens_in = _estimate_tokens(prompt_chars)
     if not tokens_out and response_chars:
