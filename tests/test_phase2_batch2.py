@@ -34,18 +34,26 @@ class TestRagEval:
 
 
 class TestLlmConsent:
-    def test_consent_page_loads(self, client):
-        register(client, name="C User", email="consent1@example.com",
-                 password="pw123456")
-        login(client, email="consent1@example.com", password="pw123456")
+    def test_consent_page_loads(self, client, app):
+        from unified_app import User, db
+        with app.app_context():
+            u = User(name="C User", email="consent1@example.com")
+            u.set_password("Str0ng!Pass1")
+            db.session.add(u)
+            db.session.commit()
+        login(client, email="consent1@example.com", password="Str0ng!Pass1")
         r = client.get("/consent/llm")
         assert r.status_code == 200
         assert b"AI features" in r.data
 
     def test_consent_records(self, client, app):
-        register(client, name="C User", email="consent2@example.com",
-                 password="pw123456")
-        login(client, email="consent2@example.com", password="pw123456")
+        from unified_app import User, db
+        with app.app_context():
+            u = User(name="C User", email="consent2@example.com")
+            u.set_password("Str0ng!Pass1")
+            db.session.add(u)
+            db.session.commit()
+        login(client, email="consent2@example.com", password="Str0ng!Pass1")
         r = client.post("/consent/llm", data={"agree": "yes", "next": "/"})
         assert r.status_code == 302
         from unified_app import LLMConsent, User
@@ -56,9 +64,13 @@ class TestLlmConsent:
             assert c.policy_version == "v1"
 
     def test_consent_withdraw(self, client, app):
-        register(client, name="C User", email="consent3@example.com",
-                 password="pw123456")
-        login(client, email="consent3@example.com", password="pw123456")
+        from unified_app import User, db
+        with app.app_context():
+            u = User(name="C User", email="consent3@example.com")
+            u.set_password("Str0ng!Pass1")
+            db.session.add(u)
+            db.session.commit()
+        login(client, email="consent3@example.com", password="Str0ng!Pass1")
         client.post("/consent/llm", data={"agree": "yes"})
         r = client.post("/consent/llm/withdraw")
         assert r.status_code == 302
