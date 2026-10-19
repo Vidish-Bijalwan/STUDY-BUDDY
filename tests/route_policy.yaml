@@ -17,6 +17,10 @@
 "/api/companies": public
 "/api/constructor_generate": auth
 "/api/dsa/problems": public
+"/api/eng/interview/score-v2": public
+"/api/eng/jd-v2/match": public
+"/api/eng/jobs/paste-jd": public
+"/api/eng/jobs/recommend": public
 "/api/interview-questions/<company>": public
 "/api/parse_preview": auth
 "/api/star/examples": public
