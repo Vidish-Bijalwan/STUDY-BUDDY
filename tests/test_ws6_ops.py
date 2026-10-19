@@ -314,17 +314,25 @@ def test_memory_budget_script_passes():
     """
     last_err = ""
     for attempt in range(2):
-        result = subprocess.run(
-            [sys.executable, str(ROOT / "scripts" / "check_memory.py"),
-             "--budget-mb", "400"],
-            capture_output=True, text=True, timeout=300,
-            env={**os.environ, "OPP_NO_AUTO_REFRESH": "1",
-                 "PYTHONPATH": str(ROOT)},
-            cwd=str(ROOT),
-        )
+        try:
+            result = subprocess.run(
+                [sys.executable, str(ROOT / "scripts" / "check_memory.py"),
+                 "--budget-mb", "400"],
+                capture_output=True, text=True, timeout=300,
+                env={**os.environ, "OPP_NO_AUTO_REFRESH": "1",
+                     "PYTHONPATH": str(ROOT)},
+                cwd=str(ROOT),
+            )
+        except Exception as e:
+            last_err = f"subprocess exception: {e!r}"
+            continue
         if result.returncode == 0 and "PASS" in result.stdout:
             return
-        last_err = result.stderr[-2000:] + result.stdout[-500:]
+        last_err = (
+            f"rc={result.returncode} "
+            f"stdout={result.stdout[-800:]!r} "
+            f"stderr={result.stderr[-800:]!r}"
+        )
     assert False, f"memory budget check failed twice: {last_err}"
 
 
