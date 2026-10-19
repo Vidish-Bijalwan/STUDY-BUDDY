@@ -48,6 +48,8 @@ from studybuddy.learning_roadmaps import weekly_planner  # noqa: E402
 from studybuddy.linkedin_grader import recruiter_search_check  # noqa: E402
 from studybuddy.mock_interview import voice_interview_prep  # noqa: E402
 from studybuddy.pdf_qa import qa_to_notes  # noqa: E402
+from studybuddy.aptitude_test import pick_questions as aptitude_pick  # noqa: E402
+from studybuddy.aptitude_test import score_attempt as aptitude_score  # noqa: E402
 from studybuddy.portfolio import check_demo_links  # noqa: E402
 from studybuddy.salary_data import evaluate_offer  # noqa: E402
 from studybuddy.skill_quizzes import weakness_drill  # noqa: E402
@@ -260,6 +262,17 @@ class QaToNotesIn(_NonEmpty):
     title: str = Field(default="Study Notes", max_length=300)
 
 
+class AptitudePickIn(_NonEmpty):
+    category: Optional[str] = Field(default=None, max_length=50)
+    n: int = Field(default=10, ge=1, le=50)
+    seed: Optional[int] = Field(default=None)
+
+
+class AptitudeScoreIn(_NonEmpty):
+    question_ids: list[str] = Field(min_length=1, max_length=50)
+    answers: dict[str, str]
+
+
 def _meta(tool_id: str, feature: str, name: str, **kw: Any) -> ToolMeta:
     return ToolMeta(tool_id=tool_id, feature=feature, name=name, **kw)
 
@@ -320,6 +333,12 @@ _reg(_meta("certs/roi", "Cert Guide", "Cert ROI", data_source="curated JSON"),
      CertRoiIn, cert_roi)
 _reg(_meta("pdfqa/qa-to-notes", "PDF Q&A", "Q&A to Notes"),
      QaToNotesIn, qa_to_notes)
+_reg(_meta("aptitude/pick-questions", "Aptitude Test", "Pick Questions",
+           data_source="curated JSON (338 questions)"),
+     AptitudePickIn, aptitude_pick)
+_reg(_meta("aptitude/score", "Aptitude Test", "Score Attempt",
+           data_source="curated JSON"),
+     AptitudeScoreIn, aptitude_score)
 
 
 # ---------------------------------------------------------------------------
