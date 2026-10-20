@@ -2227,7 +2227,26 @@ def _ensure_prod_schema(app):
                         ", ".join(added))
         try:
             from flask_migrate import stamp
-            stamp(revision="head")
+            # Alembic's stamp() applies the ini's logging config
+            # (fileConfig, disable_existing_loggers=True), which DISABLES
+            # every logger created so far and replaces the root handlers —
+            # in production that would silence the app's own loggers for
+            # the life of the process. Snapshot and restore around it.
+            _root = logging.getLogger()
+            _saved_disabled = {
+                name: lg.disabled
+                for name, lg in logging.Logger.manager.loggerDict.items()
+                if isinstance(lg, logging.Logger)}
+            _saved_root_handlers = list(_root.handlers)
+            _saved_root_level = _root.level
+            try:
+                stamp(revision="head")
+            finally:
+                for name, lg in logging.Logger.manager.loggerDict.items():
+                    if isinstance(lg, logging.Logger):
+                        lg.disabled = _saved_disabled.get(name, False)
+                _root.handlers = _saved_root_handlers
+                _root.setLevel(_saved_root_level)
         except Exception:
             log.warning("schema-ensure: alembic stamp skipped", exc_info=True)
         log.info("schema-ensure: production schema verified")
