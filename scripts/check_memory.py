@@ -20,6 +20,17 @@ BUDGET_MB = 400
 
 
 def rss_mb() -> float:
+    # VmHWM is THIS process image's peak RSS (per-mm, reset on exec).
+    # getrusage().ru_maxrss is NOT reset on exec — a child spawned from a
+    # heavy parent (e.g. pytest after thousands of tests) inherits the
+    # parent's peak and the budget check measures the wrong process.
+    try:
+        with open("/proc/self/status") as fh:
+            for line in fh:
+                if line.startswith("VmHWM:"):
+                    return int(line.split()[1]) / 1024.0
+    except OSError:
+        pass
     return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
 
 

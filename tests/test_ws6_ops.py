@@ -306,12 +306,6 @@ def test_gunicorn_config_values():
 # PERF-09: memory budget script
 # ---------------------------------------------------------------------------
 
-@pytest.mark.skipif(
-    os.environ.get("PYTEST_XDIST_WORKER"),
-    reason="RSS measurement is polluted by xdist worker state; the budget "
-           "is enforced strictly by the dedicated memory-budget CI "
-           "workflow running scripts/check_memory.py standalone.",
-)
 def test_memory_budget_script_passes():
     """Boots the real app; fails if peak RSS > 400 MB (slow: ~10 s).
 
