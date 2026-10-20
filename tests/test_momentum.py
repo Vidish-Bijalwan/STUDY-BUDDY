@@ -673,9 +673,17 @@ def test_summary_api(authed_client):
 
 def test_quest_claim_route(authed_client, app):
     uid = _uid(app)
+    # Quests are weekly: record the events inside the CURRENT week, or the
+    # claim (which counts this week's events) sees 0 and returns 400.
+    from datetime import datetime as _datetime
+    monday = momentum.week_start_date(_datetime.now(UTC))
     with app.app_context():
-        for d in (12, 13, 14):
-            momentum.record_event(uid, "quiz_completed", now=_dt(2026, 10, d))
+        for offset in (0, 1, 2):
+            day = monday + timedelta(days=offset)
+            momentum.record_event(
+                uid, "quiz_completed",
+                now=datetime(day.year, day.month, day.day, 12,
+                             tzinfo=UTC))
     r = authed_client.post("/momentum/api/quest/quiz-3/claim")
     assert r.status_code == 200
     assert r.get_json()["success"] is True

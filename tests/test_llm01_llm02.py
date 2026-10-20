@@ -51,7 +51,7 @@ class SampleSchema(BaseModel):
 
 class TestGenerateStructured:
     def test_valid_json(self, monkeypatch):
-        def fake_generate(prompt, user_key=None):
+        def fake_generate(prompt, user_key=None, **_kw):
             return '{"name": "test", "score": 95}'
         monkeypatch.setattr(ai_gateway, "generate", fake_generate)
         result = ai_gateway.generate_structured("prompt", SampleSchema)
@@ -59,14 +59,14 @@ class TestGenerateStructured:
         assert result.score == 95
 
     def test_markdown_fence_stripped(self, monkeypatch):
-        def fake_generate(prompt, user_key=None):
+        def fake_generate(prompt, user_key=None, **_kw):
             return '```json\n{"name": "x", "score": 1}\n```'
         monkeypatch.setattr(ai_gateway, "generate", fake_generate)
         result = ai_gateway.generate_structured("prompt", SampleSchema)
         assert result.name == "x"
 
     def test_invalid_raises_bad_output(self, monkeypatch):
-        def fake_generate(prompt, user_key=None):
+        def fake_generate(prompt, user_key=None, **_kw):
             return "not json at all"
         monkeypatch.setattr(ai_gateway, "generate", fake_generate)
         with pytest.raises(BadOutput):
@@ -75,7 +75,7 @@ class TestGenerateStructured:
 
     def test_repair_retry(self, monkeypatch):
         calls = []
-        def fake_generate(prompt, user_key=None):
+        def fake_generate(prompt, user_key=None, **_kw):
             calls.append(prompt)
             if len(calls) == 1:
                 return "bad json"

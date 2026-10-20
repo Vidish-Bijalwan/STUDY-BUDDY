@@ -2150,6 +2150,102 @@ def _store_snapshot(user_id, provider, username, data):
 # --- APP FACTORY ---
 # ========================================================
 
+def _ensure_prod_schema(app):
+    """ARC-03 self-heal for production Postgres (idempotent, additive-only).
+
+    Production schema is Alembic-managed, but the free-tier deploy has no
+    release step, so ``flask db upgrade`` never ran there: the database
+    (created in the create_all era) lacks newer tables/columns and every
+    User-table query 500s (register/login were down after the domain move
+    surfaced it). At boot we therefore run an ADDITIVE-ONLY repair:
+
+    1. create any missing tables (``db.create_all`` is checkfirst),
+    2. add any missing columns on existing tables, giving NOT NULL columns
+       a safe literal default so existing rows don't break,
+    3. stamp Alembic to ``head`` so migration state matches the models.
+
+    Nothing is ever dropped or altered. A Postgres advisory lock keeps the
+    gunicorn workers from racing; any failure is logged and boot continues
+    (a booted app beats a crash loop).
+    """
+    import sqlalchemy as sa
+    from sqlalchemy import text
+
+    log = logging.getLogger("acra")
+    lock_conn = None
+    try:
+        # Serialize workers: one repairs, the others skip and boot.
+        lock_conn = db.engine.connect()
+        got = lock_conn.execute(
+            text("SELECT pg_try_advisory_lock(727273)")).scalar()
+        if not got:
+            log.info("schema-ensure: another worker is repairing; skipping")
+            lock_conn.close()
+            lock_conn = None
+            return
+
+        insp = sa.inspect(db.engine)
+        existing_tables = set(insp.get_table_names())
+        db.create_all()
+        insp = sa.inspect(db.engine)
+        added = []
+        for table in db.metadata.sorted_tables:
+            if table.name not in existing_tables:
+                continue  # created by create_all just now, fully formed
+            try:
+                have = {c["name"] for c in insp.get_columns(table.name)}
+            except Exception:
+                continue
+            for col in table.columns:
+                if col.name in have:
+                    continue
+                ddl_type = col.type.compile(dialect=db.engine.dialect)
+                stmt = (f'ALTER TABLE "{table.name}" '
+                        f'ADD COLUMN IF NOT EXISTS "{col.name}" {ddl_type}')
+                if not col.nullable and col.server_default is None:
+                    # Existing rows can't use Python-side defaults; give
+                    # the column a literal SQL default so they backfill.
+                    if isinstance(col.type, sa.Boolean):
+                        stmt += " DEFAULT false"
+                    elif isinstance(col.type, sa.Integer):
+                        stmt += " DEFAULT 0"
+                    elif isinstance(col.type, sa.Float):
+                        stmt += " DEFAULT 0"
+                    elif isinstance(col.type, (sa.String, sa.Text)):
+                        stmt += " DEFAULT ''"
+                    elif isinstance(col.type, sa.DateTime):
+                        stmt += " DEFAULT now()"
+                    elif isinstance(col.type, sa.Date):
+                        stmt += " DEFAULT CURRENT_DATE"
+                    elif isinstance(col.type, sa.JSON):
+                        stmt += " DEFAULT '{}'"
+                db.session.execute(text(stmt))
+                added.append(f"{table.name}.{col.name}")
+        db.session.commit()
+        if added:
+            log.warning("schema-ensure: added missing columns: %s",
+                        ", ".join(added))
+        try:
+            from flask_migrate import stamp
+            stamp(revision="head")
+        except Exception:
+            log.warning("schema-ensure: alembic stamp skipped", exc_info=True)
+        log.info("schema-ensure: production schema verified")
+    except Exception:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        log.exception("schema-ensure failed; continuing boot")
+    finally:
+        if lock_conn is not None:
+            try:
+                lock_conn.execute(text("SELECT pg_advisory_unlock(727273)"))
+                lock_conn.close()
+            except Exception:
+                pass
+
+
 def create_app(config_overrides=None):
     app = Flask(__name__)
 
@@ -2236,9 +2332,13 @@ def create_app(config_overrides=None):
         _db_url = app.config.get("SQLALCHEMY_DATABASE_URI") or ""
         _is_prod_db = _db_url.startswith(("postgresql", "postgres"))
         if os.environ.get("SKIP_DB_INIT") == "1":
-            _is_prod_db = True  # treat as migration-managed
-        if not _is_prod_db:
+            pass  # no DDL at all (used when generating migrations)
+        elif not _is_prod_db:
             db.create_all()
+        else:
+            # ARC-03: no release step runs `flask db upgrade` on the free
+            # tier, so repair/verify the schema additively at boot.
+            _ensure_prod_schema(app)
 
     return app
 

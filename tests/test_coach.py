@@ -115,7 +115,7 @@ def test_analyze_rejects_short(client, authed_client):
 
 
 def test_analyze_flow(authed_client, app):
-    from unified_app import CommunicationAnalysis
+    from unified_app import CommunicationAnalysis, db
     r = authed_client.post("/coach/analyze", json={"text": RICH_TEXT})
     assert r.status_code == 200, r.data[:300]
     d = r.get_json()

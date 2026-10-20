@@ -110,9 +110,10 @@ class TestAuthBlueprint:
 # ARC-05: typed labs registry
 # ===========================================================================
 class TestLabsRegistry:
-    def test_twenty_tools_migrated(self):
+    def test_tools_migrated_count(self):
         from studybuddy.labs_registry import migrated_tool_ids
-        assert len(migrated_tool_ids()) == 20
+        # 20 original ARC-05 tools + 2 aptitude tools (Feature 10)
+        assert len(migrated_tool_ids()) == 22
 
     def test_allowlist_rejects_unknown_id(self):
         from studybuddy.labs_registry import run_typed_tool
@@ -153,7 +154,7 @@ class TestLabsRegistry:
         assert "__import__" not in code
         # every handler maps to a directly-imported function (allowlist)
         from studybuddy import labs_registry as lr
-        assert len(lr.TOOL_HANDLERS) == 20
+        assert len(lr.TOOL_HANDLERS) == 22
         for handler in lr.TOOL_HANDLERS.values():
             assert callable(handler.fn)
             assert handler.meta.requires_login is True
