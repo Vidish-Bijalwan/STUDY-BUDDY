@@ -2174,15 +2174,23 @@ def _ensure_prod_schema(app):
     log = logging.getLogger("acra")
     lock_conn = None
     try:
-        # Serialize workers: one repairs, the others skip and boot.
+        # Serialize workers: one repairs, the others WAIT for it (up to
+        # ~15s) instead of serving traffic against a half-repaired schema
+        # — the first post-deploy register used to 500 that way. If the
+        # lock never frees, proceed anyway: every repair step below is
+        # idempotent (create_all checkfirst / ADD COLUMN IF NOT EXISTS).
+        import time as _time
         lock_conn = db.engine.connect()
-        got = lock_conn.execute(
-            text("SELECT pg_try_advisory_lock(727273)")).scalar()
+        got = False
+        for _attempt in range(15):
+            got = lock_conn.execute(
+                text("SELECT pg_try_advisory_lock(727273)")).scalar()
+            if got:
+                break
+            _time.sleep(1)
         if not got:
-            log.info("schema-ensure: another worker is repairing; skipping")
-            lock_conn.close()
-            lock_conn = None
-            return
+            log.info("schema-ensure: lock busy 15s; running idempotent "
+                     "repair without the lock")
 
         insp = sa.inspect(db.engine)
         existing_tables = set(insp.get_table_names())
