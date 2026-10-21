@@ -6,14 +6,24 @@
 
 **The AI-powered career & research intelligence platform for students — from resume to offer letter, and from paper to publication.**
 
+Free & open-source: ATS resume scoring · JD matching · mock interviews · aptitude tests · DSA practice · research-paper Q&A
+
 [![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.x-black?logo=flask)](https://flask.palletsprojects.com/)
 [![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?logo=render)](https://study-buddy-3m16.onrender.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI](https://github.com/Vivek492005/AI-Career-Research-Assistant-Resume-Analysis-Job-Recommendation-Research-Paper-Intelligence-Platform/actions/workflows/ci.yml/badge.svg)](https://github.com/Vivek492005/AI-Career-Research-Assistant-Resume-Analysis-Job-Recommendation-Research-Paper-Intelligence-Platform/actions/workflows/ci.yml)
+[![CI](https://github.com/Vivek492005/STUDY-BUDDY/actions/workflows/ci.yml/badge.svg)](https://github.com/Vivek492005/STUDY-BUDDY/actions/workflows/ci.yml)
 
-[Live Demo](https://study-buddy-3m16.onrender.com) · [Features](#-features) · [Setup](#-installation--setup) · [Contributing](#-contributing)
+[Live Demo](https://study-buddy-3m16.onrender.com) · [▶ Try it — no signup](https://study-buddy-3m16.onrender.com/try) · [Features](#-features) · [Setup](#-installation--setup) · [Contributing](#-contributing)
 
+</div>
+
+---
+
+<div align="center">
+  <img src="docs/assets/demo.gif" alt="STUDY-BUDDY demo — uploading a resume on the no-signup try page and getting a full readiness report" width="880">
+  <br>
+  <em>The no-signup demo: upload a resume, get a full readiness report in seconds.</em>
 </div>
 
 ---
@@ -38,6 +48,22 @@ Built as a Flask monolith, it pairs **Google Gemini** (with automatic fallback t
 👉 **https://study-buddy-3m16.onrender.com**
 
 > Hosted on Render's free tier — the first load may take ~30 seconds while the service wakes up.
+
+**No signup?** Try the instant resume demo: **[study-buddy-3m16.onrender.com/try](https://study-buddy-3m16.onrender.com/try)** — upload a PDF/DOCX resume, get a full readiness report, nothing stored.
+
+---
+
+## ⚡ Quick Start
+
+```bash
+git clone https://github.com/Vivek492005/STUDY-BUDDY.git
+cd STUDY-BUDDY
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+python unified_app.py        # → http://localhost:5000
+```
+
+Core features work with no API keys. Full configuration (env vars, production, deployment) is in [Installation & Setup](#-installation--setup).
 
 ---
 
@@ -134,6 +160,16 @@ Built as a Flask monolith, it pairs **Google Gemini** (with automatic fallback t
 
 ---
 
+## 📸 Screenshots
+
+| Landing | No-signup demo |
+|---|---|
+| ![Landing page](docs/assets/screenshots/landing.png) | ![Try page](docs/assets/screenshots/try.png) |
+| **Dashboard** | **Skill quizzes** |
+| ![Dashboard](docs/assets/screenshots/dashboard.png) | ![Skill quizzes](docs/assets/screenshots/quiz.png) |
+
+---
+
 ## 🛠 Tech Stack
 
 | Layer | Technology |
@@ -143,7 +179,7 @@ Built as a Flask monolith, it pairs **Google Gemini** (with automatic fallback t
 | AI | Google Gemini API with Groq/OpenRouter fallback; TF-IDF/BM25 retrieval (sentence-transformers optional — keyword fallback in production) |
 | Frontend | Jinja2 templates, custom Bento CSS design system, vanilla JS |
 | Server | Gunicorn |
-| Testing | pytest (8720 tests) |
+| Testing | pytest (~2,900 tests) |
 | Deployment | Render (free tier) |
 
 ---
@@ -152,7 +188,7 @@ Built as a Flask monolith, it pairs **Google Gemini** (with automatic fallback t
 
 ```
 acra/
-├── unified_app.py          # Flask app: models, routes, app factory (~7000 lines)
+├── unified_app.py          # Flask app: models, routes, app factory (8,000+ lines)
 ├── studybuddy/             # Feature modules (pure-logic, no Flask/network/LLM)
 │   ├── momentum.py         # XP / streaks / leagues / quests engine
 │   ├── community.py        # Peer mocks + mentor office hours
@@ -176,7 +212,7 @@ acra/
 ├── static/
 │   ├── css/bento.css       # Design system
 │   └── img/                # STUDY-BUDDY owl logo + favicons
-├── tests/                  # pytest suite (8720 tests)
+├── tests/                  # pytest suite (~2,900 tests)
 └── data/                   # JSON content banks (questions, resources)
 ```
 
@@ -193,8 +229,8 @@ acra/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/Vivek492005/AI-Career-Research-Assistant-Resume-Analysis-Job-Recommendation-Research-Paper-Intelligence-Platform.git
-cd AI-Career-Research-Assistant-Resume-Analysis-Job-Recommendation-Research-Paper-Intelligence-Platform
+git clone https://github.com/Vivek492005/STUDY-BUDDY.git
+cd STUDY-BUDDY
 
 # 2. Create and activate a virtual environment
 python -m venv .venv
@@ -311,3 +347,5 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 **Vivek Bartwal** — [GitHub @Vivek492005](https://github.com/Vivek492005)
 
 Built for students, by a student. 🦉
+
+⭐ If STUDY-BUDDY helped your placement prep, a star helps other students find it.

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Try It Now — Study Buddy{% endblock %}
+{% block head %}<meta name="csrf-token" content="{{ csrf_token() }}">{% endblock %}
 {% block content %}
 <main id="main-content" class="demo-page">
   <h1>Try Study Buddy — No Signup Needed</h1>
@@ -10,16 +11,23 @@
     <h2>Upload Resume</h2>
     <form id="demo-form" enctype="multipart/form-data">
       <input type="file" id="resume" name="resume"
-             accept=".pdf,.docx,.txt" required>
-      <button type="submit">Analyze</button>
+             accept=".pdf,.docx" required>
+      <button type="submit" id="demo-submit">Analyze</button>
     </form>
-    <p>Or <a href="{{ url_for('static', filename='sample_resume.txt') }}"
-             download>download a sample resume</a> to try.</p>
+    <p>PDF or DOCX, up to 10&nbsp;MB. Or
+       <a href="{{ url_for('static', filename='sample_resume.docx') }}"
+             download>download a sample resume</a> to try it instantly.</p>
+    <p id="demo-status" hidden>Analyzing your resume…</p>
+    <p id="demo-error" class="demo-error" role="alert" hidden></p>
   </div>
 
-  <div id="demo-result" hidden>
-    <h2>Your Report</h2>
-    <div id="demo-output"></div>
+  <div class="demo-cta">
+    <h2>Free &amp; open source</h2>
+    <p>Study Buddy is built in the open — read the code, report a bug, or
+       contribute a question set. If it helps your placement prep, a star
+       helps other students find it.</p>
+    <p><a href="https://github.com/Vivek492005/STUDY-BUDDY"
+          target="_blank" rel="noopener">View on GitHub</a></p>
     <p><a href="{{ url_for('auth.register') }}">Create a free account</a>
        to save reports, track progress, and unlock AI features.</p>
   </div>
@@ -27,13 +35,37 @@
 <script nonce="{{ csp_nonce() }}">
 document.getElementById('demo-form').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const fd = new FormData();
-  fd.append('resume', document.getElementById('resume').files[0]);
-  const r = await fetch('/analyze', {method: 'POST', body: fd});
-  const data = await r.json();
-  document.getElementById('demo-result').hidden = false;
-  document.getElementById('demo-output').innerHTML =
-    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+  const err = document.getElementById('demo-error');
+  const status = document.getElementById('demo-status');
+  const btn = document.getElementById('demo-submit');
+  err.hidden = true;
+  status.hidden = false;
+  btn.disabled = true;
+  try {
+    const fd = new FormData();
+    fd.append('resume', document.getElementById('resume').files[0]);
+    const token = document.querySelector('meta[name="csrf-token"]').content;
+    const r = await fetch('/analyze', {
+      method: 'POST',
+      body: fd,
+      headers: {'X-CSRFToken': token}
+    });
+    const data = await r.json().catch(() => null);
+    if (r.ok && data && data.redirect) {
+      window.location.href = data.redirect;
+      return;
+    }
+    err.textContent = (data && data.error)
+      ? data.error
+      : 'Something went wrong. Please try a PDF or DOCX resume.';
+    err.hidden = false;
+  } catch (_) {
+    err.textContent = 'Network error — please check your connection and try again.';
+    err.hidden = false;
+  } finally {
+    status.hidden = true;
+    btn.disabled = false;
+  }
 });
 </script>
 {% endblock %}
