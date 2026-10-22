@@ -10,36 +10,36 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16.png') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bento.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/resume_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/kinetic.css') }}">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2310b981'/><path d='M30 52l12 12 28-30' stroke='white' stroke-width='10' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 </head>
-<body>
-        <div class="b-scroll-progress" data-scroll-progress aria-hidden="true"></div>
-    <div class="b-ambient" aria-hidden="true">
-        <div class="b-blob b-b1"></div>
-        <div class="b-blob b-b2"></div>
-        <div class="b-blob b-b3"></div>
-        <div class="b-gridlines"></div>
-    </div>
-    <div class="particles" id="particles" aria-hidden="true"></div>
-
+<body class="sb-workspace">
     <!-- Navigation -->
     {% set nav_active = 'resume' %}
     {% include "_site_nav.html" %}
 
-    <!-- Hero Section -->
+    <!-- Mode A intro, separated from the Mode B workspace below. -->
+    <section class="sb-work-intro" aria-label="Resume Studio introduction">
+        <div class="b-wrap">
+            <p class="sb-work-meta">Resume Studio — 01 / Upload · 02 / JD match · 03 / Rewrite · 04 / Versions · 05 / Cover · 06 / LinkedIn</p>
+            <h1 class="sb-display" aria-label="Turn your resume into opportunities.">
+                <span class="sb-mask"><span>Turn your</span></span>
+                <span class="sb-mask"><span style="--sb-delay:90ms">resume into</span></span>
+                <span class="sb-mask"><span style="--sb-delay:180ms"><span class="sb-accent">opportunities.</span></span></span>
+            </h1>
+            <p class="sb-lede">Upload a resume and get readable, evidence-based feedback — what matches, what is missing, and what to fix first. No decorative scores, no mystery numbers.</p>
+        </div>
+    </section>
+
+    <div class="sb-work">
+    <!-- Workspace — the functional upload form. All form IDs are unchanged. -->
     <section class="hero">
         <div class="hero-content">
-            <div style="margin-bottom:1.2rem;"><span class="b-pill"><span class="b-pulse"></span>AI-Powered Career Intelligence</span></div>
-            <h1>
-                Unlock Your Career<br>
-                <span class="b-grad">Potential with AI</span>
-            </h1>
-            <p>Upload your resume and get instant ATS scoring, intelligent job matching powered by BERT, skill gap analysis, and personalized career guidance — all in seconds.</p>
+            <span class="sb-work-num">01 — Upload &amp; analyse</span>
+            <h1>Start with your resume</h1>
+            <p>Upload a PDF or DOCX resume. The analyzer extracts its text and sections, scores it against transparent checks, and lists the fixes that matter most.</p>
 
             <!-- Upload Card -->
             <div class="upload-container">
@@ -80,6 +80,7 @@
     <!-- JD-Matched ATS Scoring (Wave 1, feature #1) -->
     <section class="jd-section b-reveal" id="jd-match">
         <div class="jd-card b-card">
+            <span class="sb-work-num">02 — JD match</span>
             <h2>Match My Resume <span class="b-grad">to a Job Description</span></h2>
             <p>Paste any job posting and get a transparent 0&ndash;100 ATS-style match score: keyword coverage, required-skills hit rate, experience alignment, and formatting checks &mdash; plus exactly what's missing and how to fix it.</p>
             {% if current_user.is_authenticated %}
@@ -120,6 +121,7 @@
     <!-- AI Bullet Rewriter (Wave 1, feature #2) -->
     <section class="jd-section b-reveal" id="bullet-rewriter">
         <div class="jd-card b-card">
+            <span class="sb-work-num">03 — Bullet rewriter</span>
             <h2>Rewrite Any <span class="gradient-text">Resume Bullet</span></h2>
             <p>Paste one bullet from your resume and get 2&ndash;3 stronger versions: punchier action verbs, quantified impact, and an ATS-friendly tightened line. Accept or edit any variant &mdash; every rewrite is saved to your dashboard.</p>
             {% if current_user.is_authenticated %}
@@ -150,6 +152,7 @@
     <!-- Saved Resume Versions (Wave 1, feature #3) -->
     <section class="jd-section b-reveal" id="resume-versions">
         <div class="jd-card b-card">
+            <span class="sb-work-num">04 — Saved versions</span>
             <h2>Saved <span class="gradient-text">Resume Versions</span></h2>
             <p>Keep named versions of your resume &mdash; one per target role. Set a default, compare any two versions line-by-line, and use a version directly in JD matching.</p>
             {% if current_user.is_authenticated %}
@@ -178,6 +181,7 @@
     <!-- Cover Letter + Cold Outreach Generator (Wave 1, feature #4) -->
     <section class="jd-section b-reveal" id="cover-generator">
         <div class="jd-card b-card">
+            <span class="sb-work-num">05 — Cover letter</span>
             <h2>Cover Letter <span class="b-grad">& Cold Outreach</span></h2>
             <p>Pick a resume version, paste the job description (or describe the company and role), choose a tone — get a tailored cover letter plus a short LinkedIn/email outreach message. Both are saved to your dashboard.</p>
             {% if current_user.is_authenticated %}
@@ -213,6 +217,7 @@
     <!-- LinkedIn Profile Grader (Wave 1, feature #5) -->
     <section class="jd-section b-reveal" id="linkedin-grader">
         <div class="jd-card b-card">
+            <span class="sb-work-num">06 — LinkedIn grader</span>
             <h2>LinkedIn Profile <span class="b-grad">Grader</span></h2>
             <p>Paste your LinkedIn profile sections as plain text (we never scrape LinkedIn) and get a transparent 0&ndash;100 grade: headline strength, About quality, experience quantification, skills relevance, and completeness &mdash; plus prioritized fixes. Reports are saved to your dashboard.</p>
             {% if current_user.is_authenticated %}
@@ -295,6 +300,8 @@
         </div>
     </section>
 
+    </div>
+
     <!-- Footer -->
     <footer class="b-footer">
         <div class="b-wrap b-foot-in">
@@ -342,5 +349,6 @@
     <script src="{{ url_for('static', filename='js/cover_generator.js') }}"></script>
     <script src="{{ url_for('static', filename='js/linkedin_grader.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bento.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/kinetic.js') }}" defer></script>
 </body>
 </html>

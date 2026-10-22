@@ -12,249 +12,130 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="STUDY-BUDDY">
     <meta property="og:title" content="STUDY-BUDDY — AI Career Copilot for Students">
-    <meta property="og:description" content="Free, open-source AI career copilot for students: ATS resume scoring, JD matching, mock interviews, aptitude & DSA practice, and research-paper Q&A. Try it live — no signup needed.">
+    <meta property="og:description" content="Free, open-source AI career copilot for students: ATS resume scoring, JD matching, mock interviews, aptitude &amp; DSA practice, and research-paper Q&amp;A.">
     <meta property="og:image" content="{{ url_for('static', filename='img/social-preview.png', _external=True) }}">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="STUDY-BUDDY — AI Career Copilot for Students">
-    <meta name="twitter:description" content="Free, open-source AI career copilot for students: ATS resume scoring, JD matching, mock interviews, aptitude & DSA practice, and research-paper Q&A.">
+    <meta name="twitter:description" content="Free, open-source AI career copilot for students: ATS resume scoring, JD matching, mock interviews, aptitude &amp; DSA practice, and research-paper Q&amp;A.">
     <meta name="twitter:image" content="{{ url_for('static', filename='img/social-preview.png', _external=True) }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bento.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/kinetic.css') }}">
 </head>
-<body>
+<body class="sb-editorial">
     <a class="skip-link" href="#main-content" style="position:absolute;left:-9999px;top:0;background:#fff;color:#000;padding:.75rem 1.25rem;z-index:9999;font-weight:700;">Skip to main content</a>
-    <style>.skip-link:focus{left:0}:focus-visible{outline:3px solid #4f8cff;outline-offset:2px}@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}</style>
-    <div class="b-scroll-progress" data-scroll-progress aria-hidden="true"></div>
-    <div class="b-ambient" aria-hidden="true">
-        <div class="b-blob b-b1 b-blob--drift1"></div>
-        <div class="b-blob b-b2 b-blob--drift2"></div>
-        <div class="b-blob b-b3"></div>
-        <div class="b-gridlines"></div>
-    </div>
+    <style>.skip-link:focus{left:0}:focus-visible{outline:3px solid #c8ff2e;outline-offset:2px}@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}</style>
 
     {% set nav_active = 'hub' %}
     {% include "_site_nav.html" %}
 
     <main class="b-wrap" id="main-content" tabindex="-1">
-        <!-- HERO -->
-        <section aria-label="Introduction" style="padding-top:3.2rem;">
-            <div class="b-bento">
-                <div class="b-card b-card--hero b-span-4 b-reveal">
-                    <div class="b-hero-grid">
-                    <div>
-                    <span class="b-pill"><span class="b-pulse"></span>Learn hub &mdash; live now</span>
-                    <h1>Your AI <span class="b-grad">career co-pilot</span>,<br>from campus to offer letter.</h1>
-                    <p class="b-lede">AI-powered career intelligence and research intelligence for students &mdash; analyze resumes, match job descriptions, practice interviews, track applications, and build your portfolio, all in one place.</p>
-                    <div class="b-cta-row" style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.6rem;">
-                        <a class="b-btn b-btn--primary b-magnet" href="{{ url_for('resume_home') }}">Analyze Resume
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-                        </a>
-                        <a class="b-btn b-btn--ghost b-magnet" href="{{ url_for('research_home') }}">Explore Research</a>
-                    </div>
-                    <div class="b-hero-stats" aria-label="Content library at a glance">
-                        <div class="b-hero-stat"><b>339</b><span>interview questions</span></div>
-                        <div class="b-hero-stat"><b>338</b><span>aptitude questions</span></div>
-                        <div class="b-hero-stat"><b>320</b><span>skill quiz questions</span></div>
-                        <div class="b-hero-stat"><b>132</b><span>DSA problems</span></div>
-                    </div>
-                    </div>
-                    <div class="b-hero-visual">
-                        <svg class="b-ring" viewBox="0 0 120 120" aria-hidden="true">
-                            <defs>
-                                <linearGradient id="bentoHeroGrad" x1="0" y1="0" x2="1" y2="1">
-                                    <stop offset="0" stop-color="#6366f1"/><stop offset=".5" stop-color="#22d3ee"/><stop offset="1" stop-color="#ec4899"/>
-                                </linearGradient>
-                            </defs>
-                            <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="10"/>
-                            <circle class="b-ring-fg" cx="60" cy="60" r="52" fill="none" stroke="url(#bentoHeroGrad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="49" transform="rotate(-90 60 60)"/>
-                            <text x="60" y="55" text-anchor="middle" dominant-baseline="central" class="b-ring-num">85</text>
-                            <text x="60" y="80" text-anchor="middle" class="b-ring-sub">Resume readiness</text>
-                        </svg>
-                        <a class="b-chip-float" style="top:4%;left:2%;animation-delay:.15s,1.4s;" href="{{ url_for('interview_home') }}"><span class="b-dot"></span>Mock interviews</a>
-                        <a class="b-chip-float" style="top:14%;right:0;animation-delay:.35s,2.2s;" href="{{ url_for('dsa_home') }}"><span class="b-dot"></span>DSA &middot; 132 problems</a>
-                        <a class="b-chip-float" style="bottom:16%;left:0;animation-delay:.55s,2.8s;" href="{{ url_for('star_home') }}"><span class="b-dot"></span>STAR builder</a>
-                        <a class="b-chip-float" style="bottom:5%;right:4%;animation-delay:.75s,1.8s;" href="{{ url_for('resume_home') }}"><span class="b-dot"></span>JD match</a>
-                    </div>
-                    </div>
+        <!-- HERO — Mode A editorial. No fake scores, no floating badges. -->
+        <section class="sb-hero" aria-label="Introduction">
+            <p class="sb-kicker">Free &amp; open source — for students</p>
+            <div class="sb-hero-grid">
+                <h1 class="sb-display" aria-label="Learn. Practice. Build. Get hired.">
+                    <span class="sb-mask"><span>Learn.</span></span>
+                    <span class="sb-mask"><span style="--sb-delay:90ms">Practice.</span></span>
+                    <span class="sb-mask"><span style="--sb-delay:180ms">Build.</span></span>
+                    <span class="sb-mask"><span style="--sb-delay:270ms"><span class="sb-accent">Get hired.</span></span></span>
+                </h1>
+                <div class="sb-hero-visual" aria-hidden="true">
+                    <svg class="sb-brush" viewBox="0 0 400 120" fill="none" aria-hidden="true"><path d="M12 78 C 90 20, 180 110, 260 48 C 310 10, 360 60, 392 42 L 388 84 C 320 96, 240 40, 160 82 C 100 108, 40 92, 12 78 Z" fill="#2447ff"/></svg>
+                    <p class="sb-note sb-note--a">Same you,<br>sharper future.</p>
+                    <p class="sb-note sb-note--b">Better skills.<br>Brighter opportunities. →</p>
+                    <div class="sb-marker">01<i>.</i></div>
                 </div>
+            </div>
+            <div class="sb-hero-below">
+                <p class="sb-lede">Your AI-powered study and career companion. Analyse a resume, practise interviews, solve DSA problems, and research with your own documents — in one place, with transparent feedback, not mystery scores.</p>
+                <div class="sb-cta-row">
+                    <a class="sb-btn sb-btn--primary" href="{{ url_for('resume_home') }}">Analyse my resume →</a>
+                    <a class="sb-btn sb-btn--outline" href="#tools">Explore the tools</a>
+                </div>
+            </div>
+            <div class="sb-stats" aria-label="Question and problem library">
+                <div class="sb-stat"><b>339</b><span>interview questions</span></div>
+                <div class="sb-stat"><b>338</b><span>aptitude questions</span></div>
+                <div class="sb-stat"><b>320</b><span>skill quiz questions</span></div>
+                <div class="sb-stat"><b>132</b><span>DSA problems</span></div>
             </div>
         </section>
 
-        <!-- LIVE TICKER -->
-        <div class="b-ticker b-reveal" role="marquee" aria-label="Platform capabilities">
-            <div class="b-ticker-track">
-                <span class="b-ticker-item"><span class="b-dot"></span>JD-matched ATS scoring</span>
-                <span class="b-ticker-item"><span class="b-dot"></span>AI mock interviews</span>
-                <span class="b-ticker-item"><span class="b-dot"></span>DSA practice bank</span>
-                <span class="b-ticker-item"><span class="b-dot"></span>Application tracker</span>
-                <span class="b-ticker-item"><span class="b-dot"></span>India salary explorer</span>
-                <span class="b-ticker-item"><span class="b-dot"></span>STAR answer builder</span>
-                <span class="b-ticker-item"><span class="b-dot"></span>RAG document Q&amp;A</span>
-                <span class="b-ticker-item"><span class="b-dot"></span>Paper constructor</span>
-                <span class="b-ticker-item"><span class="b-dot"></span>Opportunity radar</span>
-                <span class="b-ticker-item"><span class="b-dot"></span>Portfolio builder</span>
-                <span class="b-ticker-item" aria-hidden="true"><span class="b-dot"></span>JD-matched ATS scoring</span>
-                <span class="b-ticker-item" aria-hidden="true"><span class="b-dot"></span>AI mock interviews</span>
-                <span class="b-ticker-item" aria-hidden="true"><span class="b-dot"></span>DSA practice bank</span>
-                <span class="b-ticker-item" aria-hidden="true"><span class="b-dot"></span>Application tracker</span>
-                <span class="b-ticker-item" aria-hidden="true"><span class="b-dot"></span>India salary explorer</span>
-                <span class="b-ticker-item" aria-hidden="true"><span class="b-dot"></span>STAR answer builder</span>
-                <span class="b-ticker-item" aria-hidden="true"><span class="b-dot"></span>RAG document Q&amp;A</span>
-                <span class="b-ticker-item" aria-hidden="true"><span class="b-dot"></span>Paper constructor</span>
-                <span class="b-ticker-item" aria-hidden="true"><span class="b-dot"></span>Opportunity radar</span>
-                <span class="b-ticker-item" aria-hidden="true"><span class="b-dot"></span>Portfolio builder</span>
+        <!-- Kinetic ticker — decorative; the tool list below is the accessible version. -->
+        <div class="sb-ticker" aria-hidden="true">
+            <div class="sb-ticker-track">
+                <span>Resume <i>→</i> Interviews <i>→</i> DSA <i>→</i> Research <i>→</i> Tracker <i>→</i> Learning <i>→</i></span>
+                <span>Resume <i>→</i> Interviews <i>→</i> DSA <i>→</i> Research <i>→</i> Tracker <i>→</i> Learning <i>→</i></span>
             </div>
         </div>
 
-        <!-- STATS -->
-        <section aria-label="Platform at a glance" style="margin-top:2.2rem;">
-            <div class="b-bento">
-                <div class="b-card b-card--stat b-reveal"><div class="b-stat-num" data-count="17">17</div><div class="b-stat-label">Career + interview tools live</div></div>
-                <div class="b-card b-card--stat b-reveal b-d1"><div class="b-stat-num" data-count="6">6</div><div class="b-stat-label">Waves on the roadmap</div></div>
-                <div class="b-card b-card--stat b-reveal b-d2"><div class="b-stat-num">Free</div><div class="b-stat-label">For every student</div></div>
-                <div class="b-card b-card--stat b-reveal b-d3"><div class="b-stat-num" data-count="2">2</div><div class="b-stat-label">Ways to sign in</div></div>
+        <!-- TOOLS — six real tools, not a 17-item advertisement grid. -->
+        <section class="sb-section" id="tools" aria-label="Tools">
+            <div class="sb-section-head">
+                <h2 class="sb-section-title">Start<br>working.</h2>
+                <p class="sb-section-note">Pick a tool and do the next useful thing. Every card links to a real, working route — no demo-only tiles.</p>
             </div>
-        </section>
-
-        <!-- FLOWING FEATURE STREAMS -->
-        <section aria-label="Feature highlights" style="margin-top:2.2rem;">
-            <div class="b-marquee" aria-hidden="true">
-                <div class="b-marquee-track">
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('resume_home') }}" tabindex="-1"><span class="b-tag">ATS</span>&nbsp;JD-matched scoring</a>
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('interview_home') }}" tabindex="-1"><span class="b-tag">Mock</span>&nbsp;AI interviews</a>
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('dsa_home') }}" tabindex="-1"><span class="b-tag">DSA</span>&nbsp;Practice bank</a>
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('tracker_board') }}" tabindex="-1"><span class="b-tag">Track</span>&nbsp;Application Kanban</a>
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('salary_explorer') }}" tabindex="-1"><span class="b-tag">Pay</span>&nbsp;Salary explorer</a>
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('resume_home') }}" tabindex="-1" aria-hidden="true"><span class="b-tag">ATS</span>&nbsp;JD-matched scoring</a>
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('interview_home') }}" tabindex="-1" aria-hidden="true"><span class="b-tag">Mock</span>&nbsp;AI interviews</a>
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('dsa_home') }}" tabindex="-1" aria-hidden="true"><span class="b-tag">DSA</span>&nbsp;Practice bank</a>
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('tracker_board') }}" tabindex="-1" aria-hidden="true"><span class="b-tag">Track</span>&nbsp;Application Kanban</a>
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('salary_explorer') }}" tabindex="-1" aria-hidden="true"><span class="b-tag">Pay</span>&nbsp;Salary explorer</a>
-                </div>
-            </div>
-            <div class="b-marquee b-marquee--reverse" aria-hidden="true" style="margin-top:var(--b-gap);">
-                <div class="b-marquee-track">
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('star_home') }}" tabindex="-1"><span class="b-tag">STAR</span>&nbsp;Answer builder</a>
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('opportunity_board') }}" tabindex="-1"><span class="b-tag">Radar</span>&nbsp;Opportunities</a>
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('research_home') }}" tabindex="-1"><span class="b-tag">RAG</span>&nbsp;Document Q&amp;A</a>
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('portfolio_builder') }}" tabindex="-1"><span class="b-tag">Build</span>&nbsp;Portfolio builder</a>
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('aptitude_home') }}" tabindex="-1"><span class="b-tag">Test</span>&nbsp;Aptitude drills</a>
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('star_home') }}" tabindex="-1" aria-hidden="true"><span class="b-tag">STAR</span>&nbsp;Answer builder</a>
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('opportunity_board') }}" tabindex="-1" aria-hidden="true"><span class="b-tag">Radar</span>&nbsp;Opportunities</a>
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('research_home') }}" tabindex="-1" aria-hidden="true"><span class="b-tag">RAG</span>&nbsp;Document Q&amp;A</a>
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('portfolio_builder') }}" tabindex="-1" aria-hidden="true"><span class="b-tag">Build</span>&nbsp;Portfolio builder</a>
-                    <a class="b-card b-card--lite b-marquee-item" href="{{ url_for('aptitude_home') }}" tabindex="-1" aria-hidden="true"><span class="b-tag">Test</span>&nbsp;Aptitude drills</a>
-                </div>
-            </div>
-        </section>
-
-        <!-- CAREER FEATURES -->
-        <section id="features" aria-label="Career tools" style="margin-top:3rem;">
-            <div class="b-sec-head b-reveal">
-                <h2>Career intelligence, <span class="b-grad">twelve tools deep</span></h2>
-                <p>Everything a student needs to get hired — powered by NLP, transformers, and retrieval-augmented generation.</p>
-            </div>
-            <div class="b-bento">
-                <a class="b-card b-card--feature b-reveal" href="{{ url_for('resume_home') }}" aria-label="JD-matched ATS scoring">
-                    <span class="b-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
-                    <h3>JD-matched ATS scoring</h3><p>Paste a job description, get a 0&ndash;100 ATS match with keyword gaps.</p><span class="b-tag">Resume</span>
+            <div class="sb-tool-grid">
+                <a class="sb-tool sb-reveal" href="{{ url_for('resume_home') }}">
+                    <span class="sb-tool-num">01 / Resume</span>
+                    <span class="sb-tool-title">Resume<br>Studio</span>
+                    <p>Upload a resume, check it against a job description, rewrite bullets, and save versions per role.</p>
+                    <span class="sb-tool-link">Open Resume Studio →</span>
                 </a>
-                <a class="b-card b-card--feature b-reveal b-d1" href="{{ url_for('resume_home') }}" aria-label="AI bullet rewriter">
-                    <span class="b-icon b-icon--pink" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
-                    <h3>AI bullet rewriter</h3><p>Turn weak bullets into strong, quantified achievements.</p><span class="b-tag">Resume</span>
+                <a class="sb-tool sb-reveal" href="{{ url_for('interview_home') }}">
+                    <span class="sb-tool-num">02 / Practice</span>
+                    <span class="sb-tool-title">Mock<br>Interviews</span>
+                    <p>Practise with role-specific questions and get rubric-based feedback you can act on.</p>
+                    <span class="sb-tool-link">Start an interview →</span>
                 </a>
-                <a class="b-card b-card--feature b-reveal b-d2" href="{{ url_for('resume_home') }}" aria-label="Resume versions">
-                    <span class="b-icon b-icon--violet" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
-                    <h3>Resume versions</h3><p>Save, compare, and switch tailored resume versions.</p><span class="b-tag">Resume</span>
+                <a class="sb-tool sb-reveal" href="{{ url_for('dsa_home') }}">
+                    <span class="sb-tool-num">03 / Practice</span>
+                    <span class="sb-tool-title">DSA<br>Practice</span>
+                    <p>Solve problems by topic and difficulty, with hints and a diagnosis of your weak areas.</p>
+                    <span class="sb-tool-link">Solve problems →</span>
                 </a>
-                <a class="b-card b-card--feature b-reveal b-d3" href="{{ url_for('resume_home') }}" aria-label="Cover letter generator">
-                    <span class="b-icon b-icon--green" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></span>
-                    <h3>Cover letters</h3><p>Tailored cover letters and cold outreach in your tone.</p><span class="b-tag">Resume</span>
+                <a class="sb-tool sb-reveal" href="{{ url_for('research_home') }}">
+                    <span class="sb-tool-num">04 / Research</span>
+                    <span class="sb-tool-title">Research<br>Hub</span>
+                    <p>Ask questions of your own documents, build literature reviews, and format citations.</p>
+                    <span class="sb-tool-link">Open Research Hub →</span>
                 </a>
-                <a class="b-card b-card--feature b-reveal" href="{{ url_for('resume_home') }}" aria-label="LinkedIn grader">
-                    <span class="b-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4V8h4v1.5A6 6 0 0 1 16 8z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></span>
-                    <h3>LinkedIn grader</h3><p>0&ndash;100 profile score with prioritized fixes.</p><span class="b-tag">Profile</span>
+                <a class="sb-tool sb-reveal" href="{{ url_for('tracker_board') }}">
+                    <span class="sb-tool-num">05 / Career</span>
+                    <span class="sb-tool-title">Application<br>Tracker</span>
+                    <p>Move every application from wishlist to offer, stage by stage, in one board.</p>
+                    <span class="sb-tool-link">Open the tracker →</span>
                 </a>
-                <a class="b-card b-card--feature b-reveal b-d1" href="{{ url_for('tracker_board') }}" aria-label="Application tracker">
-                    <span class="b-icon b-icon--pink" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
-                    <h3>Application tracker</h3><p>Kanban board for every application, stage by stage.</p><span class="b-tag">Tracker</span>
-                </a>
-                <a class="b-card b-card--feature b-reveal b-d2" href="{{ url_for('assessment_quiz') }}" aria-label="Career discovery assessment">
-                    <span class="b-icon b-icon--violet" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12" y2="17"/></svg></span>
-                    <h3>Career assessment</h3><p>16-question quiz matching you to career paths.</p><span class="b-tag">Discover</span>
-                </a>
-                <a class="b-card b-card--feature b-reveal b-d3" href="{{ url_for('salary_explorer') }}" aria-label="India salary explorer">
-                    <span class="b-icon b-icon--green" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
-                    <h3>Salary explorer</h3><p>India salary ranges by role, city, and experience.</p><span class="b-tag">Explore</span>
-                </a>
-                <a class="b-card b-card--feature b-reveal" href="{{ url_for('opportunity_board') }}" aria-label="Opportunity radar">
-                    <span class="b-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></span>
-                    <h3>Opportunity radar</h3><p>Internships, scholarships, and exams with deadlines.</p><span class="b-tag">Radar</span>
-                </a>
-                <a class="b-card b-card--feature b-reveal b-d1" href="{{ url_for('portfolio_builder') }}" aria-label="Portfolio builder">
-                    <span class="b-icon b-icon--pink" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></span>
-                    <h3>Portfolio builder</h3><p>A one-page portfolio site from your profile.</p><span class="b-tag">Build</span>
-                </a>
-                <a class="b-card b-card--feature b-reveal b-d2" href="{{ url_for('profile') }}" aria-label="GitHub analyzer">
-                    <span class="b-icon b-icon--violet" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.9 3.9 0 0 0-1.1-3.1 5.4 5.4 0 0 0-.1-3.9s-1.1-.3-3.7 1.4a12.5 12.5 0 0 0-6.2 0C4.3 9.1 3.2 9.4 3.2 9.4a5.4 5.4 0 0 0-.1 3.9A3.9 3.9 0 0 0 2 16.2V20"/></svg></span>
-                    <h3>GitHub analyzer</h3><p>0&ndash;100 public profile score with concrete tips.</p><span class="b-tag">Profile</span>
-                </a>
-                <a class="b-card b-card--feature b-reveal b-d3" href="{{ url_for('profile') }}" aria-label="LeetCode stats">
-                    <span class="b-icon b-icon--green" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
-                    <h3>LeetCode stats</h3><p>Solved counts, rating, and a shareable stat card.</p><span class="b-tag">Coding</span>
+                <a class="sb-tool sb-reveal" href="{{ url_for('practice') }}">
+                    <span class="sb-tool-num">06 / Practice</span>
+                    <span class="sb-tool-title">Practice<br>Hub</span>
+                    <p>Aptitude drills, STAR answers, and communication coaching — all drills in one place.</p>
+                    <span class="sb-tool-link">Open Practice Hub →</span>
                 </a>
             </div>
         </section>
 
-        <!-- WAVE 2 BAND -->
-        <section aria-label="Interview preparation" style="margin-top:3rem;">
-            <div class="b-bento">
-                <div class="b-card b-span-4 b-reveal">
-                    <span class="b-tag">Wave 2 &mdash; live now</span>
-                    <h2 style="font-family:'Outfit',sans-serif;font-size:1.7rem;margin:14px 0 6px;">Interview preparation, <span class="b-grad">taken seriously</span></h2>
-                    <p style="color:var(--b-muted);font-size:.95rem;max-width:640px;">Deep question banks, honest rubrics, and coaches that train you &mdash; not just test you.</p>
-                    <div class="b-bento" style="margin-top:1.4rem;">
-                        <a class="b-card b-card--lite b-reveal" href="{{ url_for('interview_home') }}"><strong>AI mock interviews</strong><p style="color:var(--b-muted);font-size:.88rem;margin-top:.3rem;">Company-specific questions with rubric scoring</p></a>
-                        <a class="b-card b-card--lite b-reveal b-d1" href="{{ url_for('coach_home') }}"><strong>Communication coach</strong><p style="color:var(--b-muted);font-size:.88rem;margin-top:.3rem;">Filler words, pacing, and clarity analysis</p></a>
-                        <a class="b-card b-card--lite b-reveal b-d2" href="{{ url_for('dsa_home') }}"><strong>DSA practice</strong><p style="color:var(--b-muted);font-size:.88rem;margin-top:.3rem;">Hints and weak-topic diagnosis</p></a>
-                        <a class="b-card b-card--lite b-reveal b-d3" href="{{ url_for('aptitude_home') }}"><strong>Aptitude tests</strong><p style="color:var(--b-muted);font-size:.88rem;margin-top:.3rem;">Timed reasoning and quantitative drills</p></a>
-                    </div>
-                    <div class="b-bento" style="margin-top:var(--b-gap);">
-                        <a class="b-card b-card--lite b-reveal" href="{{ url_for('star_home') }}"><strong>STAR answer builder</strong><p style="color:var(--b-muted);font-size:.88rem;margin-top:.3rem;">Structured stories for behavioral rounds</p></a>
-                        <a class="b-card b-card--lite b-reveal b-d1" href="{{ url_for('practice') }}"><strong>Practice hub</strong><p style="color:var(--b-muted);font-size:.88rem;margin-top:.3rem;">All drills and coaches in one place</p></a>
-                    </div>
-                </div>
+        <!-- HOW IT WORKS -->
+        <section class="sb-section" aria-label="How it works">
+            <div class="sb-section-head">
+                <h2 class="sb-section-title">Three<br>steps.</h2>
+                <p class="sb-section-note">No setup tour, no dashboard to decorate. The product is the work itself.</p>
             </div>
-        </section>
-
-        <!-- RESEARCH BAND -->
-        <section aria-label="Research intelligence" style="margin-top:3rem;">
-            <div class="b-bento">
-                <a class="b-card b-card--feature b-wide b-span-2 b-reveal" href="{{ url_for('research_home') }}" aria-label="Research lab">
-                    <span class="b-icon b-icon--violet" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>
-                    <h3>Research Lab</h3><p>Paper constructor, RAG document Q&amp;A, and multi-session research — your papers, grounded in your sources.</p><span class="b-tag">Scholar</span>
-                </a>
-                <div class="b-card b-span-2 b-reveal b-d1">
-                    <span class="b-tag">Live now</span>
-                    <h3 style="font-family:'Outfit',sans-serif;font-size:1.35rem;margin:12px 0 6px;">Learning, <span class="b-grad">personalized</span></h3>
-                    <p style="color:var(--b-muted);font-size:.92rem;">Skill-gap learning roadmaps, AI-generated quizzes, and certification guidance.</p>
-                </div>
+            <div class="sb-steps">
+                <div class="sb-step sb-reveal"><b>01 — Bring your work</b><p>Upload a resume, paste a job description, or pick a problem set. Your data stays in your account.</p></div>
+                <div class="sb-step sb-reveal"><b>02 — Get honest feedback</b><p>Keyword gaps, missing skills, and prioritised fixes — shown with the evidence, not hidden behind a single number.</p></div>
+                <div class="sb-step sb-reveal"><b>03 — Do the next thing</b><p>Rewrite a bullet, practise a weak topic, or move an application forward. Then come back and check again.</p></div>
             </div>
+            <p class="sb-outline-word" data-sb-drift="0.03" aria-hidden="true">Practice → Progress</p>
         </section>
 
         <!-- CTA -->
-        <section aria-label="Get started" style="margin-top:3rem;">
-            <div class="b-bento">
-                <div class="b-card b-card--cta b-span-4 b-reveal">
-                    <h2>Stop guessing. <span class="b-grad">Start matching.</span></h2>
-                    <p>Free for students. Sign in with email or Google &mdash; your first ATS report is two minutes away.</p>
-                    <div class="b-cta-row" style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-top:1.4rem;">
-                        <a class="b-btn b-btn--primary b-magnet" href="{{ url_for('auth.register') }}">Create free account</a>
-                        <a class="b-btn b-btn--ghost b-magnet" href="{{ url_for('auth.login') }}">Sign in</a>
-                    </div>
-                </div>
+        <section class="sb-cta-band sb-reveal" aria-label="Get started">
+            <h2 class="sb-section-title">Stop guessing.<br>Start matching.</h2>
+            <p>Free for students. Sign in with email or Google — your first resume analysis is two minutes away.</p>
+            <div class="sb-cta-row" style="margin-top:24px;">
+                <a class="sb-btn sb-btn--dark" href="{{ url_for('auth.register') }}">Create free account</a>
+                <a class="sb-btn sb-btn--outline" href="{{ url_for('auth.login') }}">Sign in</a>
             </div>
         </section>
     </main>
@@ -270,5 +151,6 @@
         </div>
     </footer>
     <script src="{{ url_for('static', filename='js/bento.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/kinetic.js') }}" defer></script>
 </body>
 </html>
