@@ -469,3 +469,22 @@ body:has(.sb-dash) { background: #0a0a0a !important; }
 .sb-iv .iv-score-ring { width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; margin: 0 auto 1rem; }
 .sb-iv .iv-bar-row { display: grid; grid-template-columns: 130px 1fr 44px; gap: 0.7rem; align-items: center; margin-bottom: 0.55rem; font-size: 0.85rem; }
 @media (max-width: 700px) { .sb-dsa .dsa-prob { flex-direction: column; align-items: flex-start; } .sb-iv .iv-card { padding: 1.4rem; } .sb-iv .iv-bar-row { grid-template-columns: 100px 1fr 40px; } }
+
+/* AUDIT FIX 1 (P0): banned gradients were still live on every page that
+   only inherits kinetic via base.html, because kinetic only overrode
+   .b-btn--primary inside .b-nav/.sb-dash. Make the override global so
+   login, tracker, DSA workspace and all mixed pages get solid blue. */
+.b-btn--primary { background: #2447ff !important; box-shadow: none !important; border-radius: 0 !important; }
+.b-btn--primary:hover { background: #1a33c8 !important; box-shadow: none !important; transform: none !important; }
+.b-grad, .b-stat-num, .b-hero-stat b {
+  background: none !important; -webkit-background-clip: initial !important; background-clip: initial !important;
+  color: #2447ff !important; -webkit-text-fill-color: #2447ff !important;
+}
+.b-bar > i { background: #2447ff !important; }
+.b-scroll-progress { background: #2447ff !important; }
+/* Decorative ambient glows/particles are banned by the P0 direction;
+   they are decorative only, so hiding them cannot break functionality. */
+.b-ambient { display: none !important; }
+/* Tracker-specific gradient buttons (inline <style> in tracker.html) */
+.tk-btn { background: #2447ff !important; border-radius: 0 !important; }
+.tk-head h1 .gradient-text { background: none !important; -webkit-background-clip: initial !important; background-clip: initial !important; color: #2447ff !important; -webkit-text-fill-color: #2447ff !important; }
