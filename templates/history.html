@@ -1,17 +1,45 @@
 {% extends "base.html" %}
 {% block title %}Dashboard | Study-Buddy{% endblock %}
 {% block content %}
-<div class="b-card b-card--hero b-reveal" style="margin-top:2rem;padding:40px 36px;">
-    <span class="b-pill"><span class="b-pulse"></span>Your workspace</span>
-    <h1 style="font-family:'Outfit',sans-serif;font-size:2.2rem;margin:.6rem 0 .4rem;">Your <span class="b-grad">Dashboard</span></h1>
-    <p class="b-lede" style="font-size:1rem;">Every analysis you run while logged in is saved here. Keep building, {{ current_user.name }}.</p>
+<div class="sb-dash">
+<div style="margin-top:2rem;">
+    <p class="sb-kicker">Your workspace — real work, not sample data</p>
+    <h1 class="sb-display" style="font-size:clamp(3rem,8vw,6.5rem);margin:0;">Your<br>workspace.</h1>
+    <p class="sb-lede">Every analysis you run while logged in is saved here. Keep building, {{ current_user.name }}.</p>
 </div>
 
-<div class="b-bento" style="margin-top:var(--b-gap);">
-    <div class="b-card b-card--stat b-reveal"><div class="b-stat-num" data-count="{{ analyses|length }}">{{ analyses|length }}</div><div class="b-stat-label">Resume analyses</div></div>
-    <div class="b-card b-card--stat b-reveal b-d1"><div class="b-stat-num" data-count="{{ jd_matches|length }}">{{ jd_matches|length }}</div><div class="b-stat-label">JD match reports</div></div>
-    <div class="b-card b-card--stat b-reveal b-d2"><div class="b-stat-num" data-count="{{ interviews|length }}">{{ interviews|length }}</div><div class="b-stat-label">Mock interviews</div></div>
-    <div class="b-card b-card--stat b-reveal b-d3"><div class="b-stat-num" data-count="{{ goals|length }}">{{ goals|length }}</div><div class="b-stat-label">Career goals</div></div>
+<div class="sb-dash-layout">
+    <aside class="sb-dash-side" aria-label="Tools">
+        <h2>Go to</h2>
+        <ul>
+            <li><a href="{{ url_for('resume_home') }}">Resume Studio <span>{{ analyses|length }} analyses</span></a></li>
+            <li><a href="{{ url_for('interview_home') }}">Mock Interviews <span>{{ interviews|length }} sessions</span></a></li>
+            <li><a href="{{ url_for('dsa_home') }}">DSA Practice <span>Solve</span></a></li>
+            <li><a href="{{ url_for('research_home') }}">Research Hub <span>Open</span></a></li>
+            <li><a href="{{ url_for('tracker_board') }}">Application Tracker <span>{{ tracker_stats.total if tracker_stats else 0 }} tracked</span></a></li>
+            <li><a href="{{ url_for('learn_hub') }}">Learn Hub <span>Open</span></a></li>
+        </ul>
+    </aside>
+    <div>
+        <div class="b-bento">
+            <div class="b-card b-card--stat b-reveal"><div class="b-stat-num" data-count="{{ analyses|length }}">{{ analyses|length }}</div><div class="b-stat-label">Resume analyses</div></div>
+            <div class="b-card b-card--stat b-reveal b-d1"><div class="b-stat-num" data-count="{{ jd_matches|length }}">{{ jd_matches|length }}</div><div class="b-stat-label">JD match reports</div></div>
+            <div class="b-card b-card--stat b-reveal b-d2"><div class="b-stat-num" data-count="{{ interviews|length }}">{{ interviews|length }}</div><div class="b-stat-label">Mock interviews</div></div>
+            <div class="b-card b-card--stat b-reveal b-d3"><div class="b-stat-num" data-count="{{ goals|length }}">{{ goals|length }}</div><div class="b-stat-label">Career goals</div></div>
+        </div>
+        {% if analyses %}
+        <div class="b-card b-reveal" style="margin-top:var(--b-gap);">
+            <div class="b-sec-head" style="margin:0 0 .8rem;"><h2 style="font-size:1.15rem;">Continue where you left off</h2><p>Your latest saved analysis.</p></div>
+            <p style="margin:0 0 .8rem;">{{ analyses[0].filename or 'Resume' }} — ATS {{ analyses[0].ats_score if analyses[0].ats_score is not none else '—' }}</p>
+            <div class="b-cta-row"><a class="b-btn b-btn--primary b-btn--sm" href="{{ url_for('view_result', analysis_id='db-' ~ analyses[0].id) }}" style="text-decoration:none;">Open latest result</a></div>
+        </div>
+        {% else %}
+        <div class="b-card b-reveal" style="margin-top:var(--b-gap);">
+            <div class="b-sec-head" style="margin:0 0 .8rem;"><h2 style="font-size:1.15rem;">Start with one real thing</h2><p>No saved work yet — this page fills up as you use the tools.</p></div>
+            <div class="b-cta-row"><a class="b-btn b-btn--primary b-btn--sm" href="{{ url_for('resume_home') }}" style="text-decoration:none;">Analyse a resume</a></div>
+        </div>
+        {% endif %}
+    </div>
 </div>
 
 {% if momentum_widget %}
@@ -326,4 +354,5 @@
 {% else %}
 <div class="b-card b-reveal"><p style="color:var(--b-muted);">No goals yet — set your first career target above.</p></div>
 {% endif %}
+</div>
 {% endblock %}
