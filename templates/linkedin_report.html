@@ -13,7 +13,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bento.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/resume_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/kinetic.css') }}">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2310b981'/><path d='M30 52l12 12 28-30' stroke='white' stroke-width='10' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+    <style>h1, h2 { font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: -0.01em; line-height: 0.95; }</style>
 </head>
 <body>
     <div class="b-scroll-progress" data-scroll-progress aria-hidden="true"></div>
@@ -32,7 +34,7 @@
     <section class="jd-section b-reveal">
         <div class="jd-card b-card">
             <p style="margin-bottom:1rem;"><a href="{{ url_for('dashboard') }}" style="color:var(--accent-secondary);font-weight:600;text-decoration:none;">&larr; Back to dashboard</a></p>
-            <h2>LinkedIn <span class="b-grad">Grading Report</span></h2>
+            <h2>LinkedIn <span style="color:#2447ff;">Grading Report</span></h2>
             <p>Saved {{ created_at.strftime('%d %b %Y, %I:%M %p') if created_at else '' }} &middot; only visible to you.</p>
             <div id="liSavedReport" aria-live="polite"></div>
         </div>
