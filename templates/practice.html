@@ -14,6 +14,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bento.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/resume_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/kinetic.css') }}">
+    <style>.dashboard-header h1 { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(2.2rem, 5vw, 3.4rem); line-height: 0.95; text-transform: uppercase; letter-spacing: -0.01em; } .practice-tabs { border-radius: 0; } .practice-tab { border-radius: 0; } .practice-tab.active { background: #2447ff; box-shadow: none; }</style>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
 </head>
 <body>
@@ -33,7 +35,7 @@
         <div class="practice-container">
             <!-- Header -->
             <div class="dashboard-header b-reveal">
-                <h1>Interview <span class="b-grad">Practice Hub</span></h1>
+                <h1>Interview <span style="color:#2447ff;">Practice Hub</span></h1>
                 <p class="summary-text">Prepare for your dream job with company-specific interview questions and curated coding challenges from top tech companies.</p>
             </div>
 
